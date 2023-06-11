@@ -21,6 +21,16 @@ class TargetRegionSegmentation:
   For moving targets or moving cameras.
   """
   pass
+
+
+@dataclass
+class FeatureLevelEnsemble:
+  feature_extractors: List[FeatureExtractor]
+    
+  def predict(file_path: str) -> Predictions:
+    for feature_extractor in self.feature_extractors
+      features = feature_extractor.run(file_path)
+      ...
   
   
 @dataclass 
