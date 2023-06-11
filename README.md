@@ -9,5 +9,6 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * jupyter-scatter ? 
 * pandas 
 * CocoFrame (pending completion)
+* Norfair or an object tracking framework
 
 Check calmcode tutorials 
