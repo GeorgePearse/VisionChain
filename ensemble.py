@@ -12,6 +12,36 @@ from transformation import Transformation
 # NB this is all complete pseudo code, just mapping out thev value the 
 # package could deliver
 
+@dataclass
+class TargetRegionSegmentation:
+  """
+  Design a pipeline to help use a segmentation model to define 
+  what regions it's okay to keep predictions within. 
+  """
+  pass
+  
+  
+@dataclass 
+class ProximityBasedPredictionFilter(Transformation):
+  """
+  Type of filter dedicated to determining the class of an object 
+  based on the proximity of other objects. 
+  
+  e.g. only a Z if both X and Y present. 
+  
+  A if only 1 present within certain radius, 
+  B if only 2 present within certain radius,
+  C if both 1 and 2 present within certain radius
+  """
+  def get_pairwise_distances():
+    pass
+  
+  def get_iou(): 
+    pass 
+  
+  def run():
+    pass
+    
 
 @dataclass
 class Ensemble:
