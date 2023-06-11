@@ -11,5 +11,6 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * CocoFrame (pending completion)
 * Norfair or an object tracking framework
 * human-learn https://koaning.github.io/human-learn/
+* Maybe something like hamilton for clean pandas transformations.
 
 Check calmcode tutorials 
