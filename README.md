@@ -18,6 +18,8 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * Quaterion for similarity learning of the classifier in a CompositeDetector.
 * Multiple off-the-shelf-models combined (langchain style, gives the name).
 * Simple way to train detector on the feature input of several different architectures
+* May raft / optical flow stuff. 
+* Edge detectors etc. in kornia, the list in 'feature' could almost all be included https://kornia.readthedocs.io/en/latest/feature.html
 
 Check calmcode tutorials.
 
