@@ -45,6 +45,9 @@ class ProximityBasedPredictionFilter(Transformation):
   B if only 2 present within certain radius,
   C if both 1 and 2 present within certain radius
   """
+  min_dist: float
+  max_dist: float
+  
   def get_pairwise_distances():
     pass
   
