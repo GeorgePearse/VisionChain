@@ -16,7 +16,8 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * Top X style queries for Grounding Dino or Sam. e.g. state 3 oranges and retain the top 3 orange predictions.
 * QDrant positive - negative 
 * Quaterion for similarity learning of the classifier in a CompositeDetector.
-* Multiple off-the-shelf-models combined (langchain style, gives the name) 
+* Multiple off-the-shelf-models combined (langchain style, gives the name).
+* Simple way to train detector on the feature input of several different architectures
 
 Check calmcode tutorials.
 
