@@ -14,6 +14,8 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * Maybe something like hamilton for clean pandas transformations.
 * Definitely hugging-face.
 * Top X style queries for Grounding Dino or Sam. e.g. state 3 oranges and retain the top 3 orange predictions.
+* QDrant positive - negative 
+* Quaterion for similarity learning of the classifier in a CompositeDetector
 
 Check calmcode tutorials.
 
