@@ -17,6 +17,8 @@ class TargetRegionSegmentation:
   """
   Design a pipeline to help use a segmentation model to define 
   what regions it's okay to keep predictions within. 
+  
+  For moving targets or moving cameras.
   """
   pass
   
