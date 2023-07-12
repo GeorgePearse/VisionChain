@@ -29,7 +29,9 @@ Framework to support common preprocessing and postprocessing steps, along with c
 object_detector = Model(
     preprocessor=Preprocessor(),
     model_path='model.onnx',
-    postprocessor=Postrprocessor(
+    postprocessor=Postprocessor(
+      class_list=class_list,
+      thresholds=thresholds,
       roi_filter_class = 'conveyor_belt', # or could be conveyor belt, or could be road etc.
     )
 ) 
