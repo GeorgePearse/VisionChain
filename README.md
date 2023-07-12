@@ -21,6 +21,20 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * May raft / optical flow stuff. 
 * Edge detectors etc. in kornia, the list in 'feature' could almost all be included https://kornia.readthedocs.io/en/latest/feature.html
 
+## Features 
+
+* ROI detectors, e.g. an object detector that outpus an area, used as a filter for another detector.
+* Enables you to count objects in a region, even if that region, or the camera, is moving. 
+```
+object_detector = Model(
+    preprocessor=Preprocessor(),
+    model_path='model.onnx',
+    postprocessor=Postrprocessor(
+      roi_filter_class = 'conveyor_belt', # or could be conveyor belt, or could be road etc.
+    )
+) 
+```
+
 Check calmcode tutorials.
 
 Would need to actually integrate models as they came. 
