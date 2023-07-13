@@ -33,7 +33,7 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] SAHI
 - [ ] Normalization code (e.g. get normalization values for a dataset). Run some more experiments on this on different datasets and write them up.
 - [ ] Package in some simple labelling functionlaity, e.g. 3 of Y, and fix labels.
-- [ ] Query based Active Learning.
+- [ ] Query based Active Learning, an object detection model that didn't need to be fed coco annotations, but could easily be provided a mix of a COCO dataset and then start asking crop questions from a dataset where it was uncertain. Then use simple copy paste, to place those queries on realistic backgrounds.
 - [ ] Sort out the batching to combine a Classifier with an Object Detector efficiently.
 - [ ] Function to convert mask to bounding box.
 - [ ] Functionality to resize objects to within range (e.g. find smallest and largest true object, and aim to augment to within this scale, would work particularly well with CopyPaste) 
@@ -50,6 +50,9 @@ object_detector = Model(
     )
 ) 
 ```
+
+- [ ] Link this all with a research page / blog: 
+      - 
 
 Check calmcode tutorials.
 
