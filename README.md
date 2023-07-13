@@ -68,6 +68,7 @@ class Thresholding(PostprocessingHook):
 Postprocessor([
     Thresholding(thresholds={}),
     ClassAgnosticNMS(nms_threhold=0.8),
+    ClassOrderedNMS(preferential_class_list=['person', 'car', 'truck'], iou_threshold), 
     ShapeFilter(width=400, height=400, class='car'),
     ColourFilter(central_colour='XXX', range='XXX'),
     OnlyInsideRegionFilter(region_defining_classes=['conveyor_belt']),
