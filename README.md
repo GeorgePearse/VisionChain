@@ -39,6 +39,7 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Functionality to resize objects to within range (e.g. find smallest and largest true object, and aim to augment to within this scale, would work particularly well with CopyPaste)
 - [ ] Auto tuning of heuristics e.g. find a sensible confined range for the width and height of an object, or colour range / set.  + pyodi like visualization, return the code
 - [ ] Profiling of speed of each step of the postprocessing.
+- [ ] Ability to analyse how each filter impacts the performance, and evaluate different combinations. 
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving.
 
