@@ -67,7 +67,8 @@ Postprocessor([
     ClassAgnosticNMS(nms_threhold=0.8),
     ShapeFilter(width=400, height=400, class='car'),
     ColourFilter(central_colour='XXX', range='XXX'),
-    ROIInsideFilter(roi_class='conveyor_belt'),
+    OnlyInRegionFilter(region_defining_classes=['conveyor_belt']),
+    OnlyOutsideRegionFilter(region_defining_classes=['X']),
     IgnorePredsWhen(ignore_classes=['image_static', 'extreme_blur']),
 ])
 ```
