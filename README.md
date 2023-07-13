@@ -34,6 +34,8 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Normalization code (e.g. get normalization values for a dataset). Run some more experiments on this on different datasets and write them up.
 - [ ] Package in some simple labelling functionlaity, e.g. 3 of Y, and fix labels.
 - [ ] Query based Active Learning.
+- [ ] Sort out the batching to combine a Classifier with an Object Detector efficiently.
+- [ ] Function to convert mask to bounding box. 
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving. 
 ```
