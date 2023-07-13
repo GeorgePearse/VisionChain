@@ -67,7 +67,7 @@ Postprocessor([
     ClassAgnosticNMS(nms_threhold=0.8),
     ShapeFilter(width=400, height=400, class='car'),
     ColourFilter(central_colour='XXX', range='XXX'),
-    OnlyInRegionFilter(region_defining_classes=['conveyor_belt']),
+    OnlyInsideRegionFilter(region_defining_classes=['conveyor_belt']),
     OnlyOutsideRegionFilter(region_defining_classes=['X']),
     IgnorePredsWhen(ignore_classes=['image_static', 'extreme_blur']),
     BinaryClassificationFixer(suspect_class='truck', model=Model(model_path='truck_car.onnx'))
