@@ -2,3 +2,4 @@
 
 Constraining artificial stupidity. 
 
+It's often surprisingly difficult to train out a stubborn false positive. These false positives can appear very stupid to clients. It can be a simple thing like an object of a given colour is NEVER some class, or that an object of a given size is NEVER another. These problems are simple and these mistakes should not be made. 
