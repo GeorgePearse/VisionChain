@@ -36,7 +36,9 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Query based Active Learning, an object detection model that didn't need to be fed coco annotations, but could easily be provided a mix of a COCO dataset and then start asking crop questions from a dataset where it was uncertain. Then use simple copy paste, to place those queries on realistic backgrounds.
 - [ ] Sort out the batching to combine a Classifier with an Object Detector efficiently.
 - [ ] Function to convert mask to bounding box.
-- [ ] Functionality to resize objects to within range (e.g. find smallest and largest true object, and aim to augment to within this scale, would work particularly well with CopyPaste) 
+- [ ] Functionality to resize objects to within range (e.g. find smallest and largest true object, and aim to augment to within this scale, would work particularly well with CopyPaste)
+- [ ] Auto tuning of heuristics e.g. find a sensible confined range for the width and height of an object, or colour range / set.  + pyodi like visualization, return the code
+- [ ] Profiling of speed of each step of the postprocessing.
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving.
 
