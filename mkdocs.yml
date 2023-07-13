@@ -18,9 +18,10 @@ theme:
         name: Switch to light mode
   
 nav:     
-  - Folders:
-    - Training: 'index.md'
+  - Dataset Splitting: 'index.md'
+  - Dataset Analysis: 'dataset_analysis.md'
   - Utils: 'index.md'
+  - Evaluation: 'index.md'
 
 plugins:
 - mkdocstrings:
