@@ -1,0 +1,59 @@
+site_name: "Vision Research"
+repo_url: https://github.com/BinItAI/vision-research
+
+theme:
+  name: "material"
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+nav:     
+  - Folders:
+    - Training: 'training/training.md'
+    - Datasets: 'datasets/datasets.md'
+    - Automation: 'automation/automation.md'
+    - Deployment: 'deployment/deployment.md'
+  - Utils: 
+    - Frame Batch: 'utils/frame_batch.md'
+    - Detectron Hooks: 'utils/custom_trainer.md'
+  - Infrastructure and Tooling Tutorials: 
+    - CVAT: 'infra/cvat.md'
+    - Aim: 'infra/aim.md'
+    - MLTest: 'infra/mltest.md'
+    - AWS: 'infra/aws.md'
+    - Fiftyone: 'infra/voxel.md'
+    - MMDetection: 'infra/mmdetection.md'
+    - 'Object Detection Frameworks': 'infra/ml_frameworks.md'
+  - Testing: 
+    - Testing: 'testing/testing.md'
+  - MkDocs: 'mkdocs_notes/mkdocs.md'
+  - Tutorials: 'tutorials/mmdetection.md'
+  - Resources: 'resources/resources.md'
+
+plugins:
+- mkdocstrings:
+    enabled: !ENV [ENABLE_MKDOCSTRINGS, true]
+    default_handler: python
+    handlers:
+      python:
+        options:
+          show_source: true
+- search:
+    lang: en
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
