@@ -62,12 +62,14 @@ class Thresholding(PostprocessingHook):
 ```
 
 ```
-Postprocessor(
+Postprocessor([
     Thresholding(thresholds={}),
     ClassAgnosticNMS(nms_threhold=0.8),
-    ShapeFilter(width=400, height=400, class='Car'),
-    ColourFilter(central_colour='XXX', range='XXX'), 
-)
+    ShapeFilter(width=400, height=400, class='car'),
+    ColourFilter(central_colour='XXX', range='XXX'),
+    ROIInsideFilter(roi_class='conveyor_belt'),
+    IgnorePredsWhen(ignore_classes=['image_static', 'extreme_blur']),
+])
 ```
 
 
