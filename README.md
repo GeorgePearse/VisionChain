@@ -38,7 +38,39 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Function to convert mask to bounding box.
 - [ ] Functionality to resize objects to within range (e.g. find smallest and largest true object, and aim to augment to within this scale, would work particularly well with CopyPaste) 
 
-* Enables you to count objects in a region, even if that region, or the camera, is moving. 
+* Enables you to count objects in a region, even if that region, or the camera, is moving.
+
+```
+@dataclass 
+class PostprocessingHook: 
+
+    def run(self, predictions: Predictions) -> Predictions:
+        pass
+
+```
+
+```
+@dataclass
+class Thresholding(PostprocessingHook): 
+    thresholds: dict 
+
+    def run(self, predictions: Predictions) -> Predictions: 
+        """
+        Do stuff
+        """
+        return thresholded_predictions
+```
+
+```
+Postprocessor(
+    Thresholding(thresholds={}),
+    ClassAgnosticNMS(nms_threhold=0.8),
+    ShapeFilter(width=400, height=400, class='Car'),
+    ColourFilter(central_colour='XXX', range='XXX'), 
+)
+```
+
+
 ```
 object_detector = Model(
     preprocessor=Preprocessor(),
