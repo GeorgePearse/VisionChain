@@ -57,3 +57,6 @@ object_detector = Model(
 Check calmcode tutorials.
 
 Would need to actually integrate models as they came. 
+
+Articles I need to get out 
+- [ ] Deploying an MMDetection model with Triton (they'd probably also want this in the docs). 
