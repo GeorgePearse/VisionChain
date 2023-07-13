@@ -72,7 +72,10 @@ Postprocessor([
     OnlyInsideRegionFilter(region_defining_classes=['conveyor_belt']),
     OnlyOutsideRegionFilter(region_defining_classes=['X']),
     IgnorePredsWhen(ignore_classes=['image_static', 'extreme_blur']),
-    BinaryClassificationFixer(suspect_class='truck', model=Model(model_path='truck_car.onnx'))
+    BinaryClassificationFixer(suspect_class='truck', model=Model(
+        preprocessor=Preprocessor()
+        model_path='truck_vs_car.onnx',
+        postprocessor=Postprocessor([Thresholding(thresholds={'car': 0.5, 'truck': 0.5}]),
 ])
 ```
 
@@ -81,11 +84,7 @@ Postprocessor([
 object_detector = Model(
     preprocessor=Preprocessor(),
     model_path='model.onnx',
-    postprocessor=Postprocessor(
-      class_list=class_list,
-      thresholds=thresholds,
-      roi_filter_class = 'conveyor_belt', # or could be conveyor belt, or could be road etc.
-    )
+    postprocessor=postprocessor,
 ) 
 ```
 
