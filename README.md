@@ -22,8 +22,12 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * Edge detectors etc. in kornia, the list in 'feature' could almost all be included https://kornia.readthedocs.io/en/latest/feature.html
 
 ## Features 
+- [ ] ROI detectors, e.g. an object detector that outpus an area, used as a filter for another detector.
+- [ ] Class balanced dataset split.
+- [ ] Tooling for combining SAM HQ with object detector
+- [ ] Tooling for combining Grounding DINO and SAM, or Grounding DINO and a custom model (Labelling Pipeline).
+- [ ] Tooling for analysing dataset of labels to come up with heuristics (colour and size, width / height). 
 
-* ROI detectors, e.g. an object detector that outpus an area, used as a filter for another detector.
 * Enables you to count objects in a region, even if that region, or the camera, is moving. 
 ```
 object_detector = Model(
