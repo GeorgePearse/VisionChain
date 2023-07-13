@@ -7,7 +7,8 @@ Framework to support common preprocessing and postprocessing steps, along with c
 * supervision
 * dataclasses
 * jupyter-scatter ? 
-* pandas 
+* pandas
+* pyodi (for a few key functions) 
 * CocoFrame (pending completion)
 * Norfair or an object tracking framework
 * human-learn https://koaning.github.io/human-learn/ with UMAP?  -> size based filters + colour based filters. 
@@ -26,7 +27,8 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Class balanced dataset split.
 - [ ] Tooling for combining SAM HQ with object detector
 - [ ] Tooling for combining Grounding DINO and SAM, or Grounding DINO and a custom model (Labelling Pipeline).
-- [ ] Tooling for analysing dataset of labels to come up with heuristics (colour and size, width / height). 
+- [ ] Tooling for analysing dataset of labels to come up with heuristics (colour and size, width / height).
+- [ ] Update labels with replacement, or merge. 
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving. 
 ```
