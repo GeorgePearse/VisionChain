@@ -28,7 +28,10 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Tooling for combining SAM HQ with object detector
 - [ ] Tooling for combining Grounding DINO and SAM, or Grounding DINO and a custom model (Labelling Pipeline).
 - [ ] Tooling for analysing dataset of labels to come up with heuristics (colour and size, width / height).
-- [ ] Update labels with replacement, or merge. 
+- [ ] Update labels with replacement, or merge.
+- [ ] Functionality to increase sensitivity to
+- [ ] SAHI
+- [ ] Normalization code (e.g. get normalization values for a dataset). 
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving. 
 ```
