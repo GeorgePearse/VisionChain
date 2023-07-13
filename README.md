@@ -76,6 +76,7 @@ Postprocessor([
         preprocessor=Preprocessor()
         model_path='truck_vs_car.onnx',
         postprocessor=Postprocessor([Thresholding(thresholds={'car': 0.5, 'truck': 0.5}]),
+    FallBackModel(trigger=Trigger(), model=Model(model_path='better_model.onnx'))),
 ])
 ```
 
