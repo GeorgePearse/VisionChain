@@ -70,6 +70,7 @@ Postprocessor([
     OnlyInRegionFilter(region_defining_classes=['conveyor_belt']),
     OnlyOutsideRegionFilter(region_defining_classes=['X']),
     IgnorePredsWhen(ignore_classes=['image_static', 'extreme_blur']),
+    BinaryClassificationFixer(suspect_class='truck', model=Model(model_path='truck_car.onnx'))
 ])
 ```
 
