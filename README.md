@@ -32,7 +32,8 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Functionality to increase sensitivity depending on context, e.g. cluster detection. 
 - [ ] SAHI
 - [ ] Normalization code (e.g. get normalization values for a dataset).
-- [ ] Package in some simple labelling functionlaity, e.g. 3 of Y, and fix labels. 
+- [ ] Package in some simple labelling functionlaity, e.g. 3 of Y, and fix labels.
+- [ ] Query based Active Learning.
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving. 
 ```
