@@ -52,11 +52,12 @@ object_detector = Model(
 ```
 
 - [ ] Link this all with a research page / blog: 
-      - 
+      
 
 Check calmcode tutorials.
 
 Would need to actually integrate models as they came. 
 
 Articles I need to get out 
-- [ ] Deploying an MMDetection model with Triton (they'd probably also want this in the docs). 
+- [ ] Deploying an MMDetection model with Triton (they'd probably also want this in the docs).
+- [ ] About the value of heuristics -> there is always some stage in the data-centric loop, where you benefit from heuristics (e.g. very small training dataset) 
