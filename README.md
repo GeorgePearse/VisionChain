@@ -31,7 +31,7 @@ Framework to support common preprocessing and postprocessing steps, along with c
 - [ ] Update labels with replacement, or merge.
 - [ ] Functionality to increase sensitivity depending on context, e.g. cluster detection. 
 - [ ] SAHI
-- [ ] Normalization code (e.g. get normalization values for a dataset).
+- [ ] Normalization code (e.g. get normalization values for a dataset). Run some more experiments on this on different datasets and write them up.
 - [ ] Package in some simple labelling functionlaity, e.g. 3 of Y, and fix labels.
 - [ ] Query based Active Learning.
 
