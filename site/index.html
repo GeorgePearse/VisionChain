@@ -378,8 +378,14 @@
 
 <h2 id="vision-chain">Vision Chain</h2>
 <p>Constraining artificial stupidity. </p>
-<p>It's often surprisingly difficult to train out a stubborn false positive. These false positives can appear very stupid to clients. It can be a simple thing like an object of a given colour is NEVER some class, or that an object of a given size is NEVER another. These problems are simple and these mistakes should not be made. </p>
+<p>It's often surprisingly difficult to train out a stubborn false positive. These false positives can appear very stupid to clients. It can be a simple thing like an object of a given colour is NEVER some class, or that an object of a given size is NEVER another. These problems are simple and these mistakes should not be made, and yet neural networks are not good at learning such absolute, deterministic rules.</p>
 <p>Good tooling to suggest sensible heuristics, to correct for these false positives does not exist, and this is one problem (among many others), that VisionChain aims to solve. </p>
+<p>This same style of heuristics are also extremely helpful for both labelling data and for online active-learning in resource constrained environments (other techniques include frame-frame jitter, and threshold based sampling).</p>
+<p>Similarly there may be a very simple condition for when you should not predict, such as excessive blur, or insufficient exposure. Some business requirements demand that your product must always predict, but many others require high specificity and demand that when your model predicts, it must predict well (potentially due to a high cost automatic intervention). </p>
+<p>A neural network based object detector can be used to improve the rules (via analysis of its predictions), while the rules can be used to improve the neural network (by increasing the size of the dataset).</p>
+<p>Most practitioners take inspiration from systems like Tesla's Data Engine, building ever larger dataset in order to teach Neural Networks simple rules, but most practical Machine Learning problems are not this open-ended. Most involve a set of fixed cameras in which object sizes are relatively consistent, and most deployments are aimed at solving a business application, which is not sufficiently addressed by just identifying objects, but instead is resolved by recognising an unexpected combination of items within a certain distance from each other, or the presence of one object in the absense of another etc.</p>
+<p>Most applications are composite problems, to build a complete product you must both recognise a region of interest and then detect all objects within it. </p>
+<p>The main downside of such approaches is the manual time to develop sensible rules, but with well-designed software, this need not be so. Rules can be suggested by analysis of a COCO dataset, and accepted or rejected by a developer. </p>
 
 
 
