@@ -19,3 +19,30 @@ Most applications are composite problems, to build a complete product you must b
 The main downside of such approaches is the manual time to develop sensible rules, but with well-designed software, this need not be so. Rules can be suggested by analysis of a COCO dataset, and accepted or rejected by a developer. 
 
 With the recent development of 'foundational models', there will be huge growth in 'training free' deployments, where a model (like grounding dino) is sufficiently accurate to deploy for a problem, but requires some guard rails specific to the dataset at hand. Models like GPT required LangChain, now models like GroundingDino need VisionChain. In an environment where GPU demand looks likely to continue to outstrip supply, such techniques will be needed to continue the democratization of Deep Learning applications. 
+
+Below is a glimpse at the API: 
+
+```
+preprocessor = Preprocessor([
+  NoPredictFilter(Blur(max_value=0.1)),
+  NoPredictFilter(Exposure(max_value=0.7, min_value=0.2)),
+])
+```
+
+```
+postprocessor = Postprocessor([
+    Thresholding(thresholds={'person': 0.5, 'car': 0.5, 'truck': 0.5, 'road': 0.5}),
+    ClassAgnosticNMS(nms_threhold=0.8),
+    ShapeFilter(min_width=400, min_height=400, class='car'),
+    ColourFilter(central_colour='XXX', range='XXX'),
+    OnlyPredictInsideRegionFilter(region_defining_classes=['road'])
+])
+```
+
+```
+model = Model(
+    preprocessor=preprocessor,
+    model_path='model.onnx',
+    postprocessor=postprocessor,
+    class_list=class_list,
+)
