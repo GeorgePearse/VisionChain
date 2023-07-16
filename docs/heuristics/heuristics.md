@@ -34,6 +34,22 @@ aluminum_can = Heuristic([
 ])
 ```
 
+```python
+Redirection(
+  trigger_class='car',
+  heuristic=ShapeFilter(...),
+  output_class='truck'
+)
+
+```
+
+```python
+FalsePostive(
+  trigger_class='car', 
+  heurstic=[], 
+)
+```
+
 Don't know when this becomes prohibitively slow to compute. 
 
 2 design options: 
@@ -56,3 +72,4 @@ system
 - Measures (https://kornia.readthedocs.io/en/latest/feature.html): 
   - kornia.feature.gftt_response
   - Somehow include Hu Moments (how you'd recognise a circle or square)
+  - Hog features and SIFT features
