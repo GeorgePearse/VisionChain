@@ -570,6 +570,17 @@ class AluminumCan(CompositeHeuristic):
   <span class="n">Transparency</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">),</span>
 <span class="p">])</span>
 </code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">Redirection</span><span class="p">(</span>
+  <span class="n">trigger_class</span><span class="o">=</span><span class="s1">&#39;car&#39;</span><span class="p">,</span>
+  <span class="n">heuristic</span><span class="o">=</span><span class="n">ShapeFilter</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+  <span class="n">output_class</span><span class="o">=</span><span class="s1">&#39;truck&#39;</span>
+<span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">FalsePostive</span><span class="p">(</span>
+  <span class="n">trigger_class</span><span class="o">=</span><span class="s1">&#39;car&#39;</span><span class="p">,</span> 
+  <span class="n">heurstic</span><span class="o">=</span><span class="p">[],</span> 
+<span class="p">)</span>
+</code></pre></div>
 <p>Don't know when this becomes prohibitively slow to compute. </p>
 <p>2 design options: 
 * Any list in a list, could be treated as an OR (I think this works?).
@@ -591,6 +602,7 @@ that should be the default. Would be quite nice to use something like an arrow b
 </li>
 <li>kornia.feature.gftt_response</li>
 <li>Somehow include Hu Moments (how you'd recognise a circle or square)</li>
+<li>Hog features and SIFT features</li>
 </ul>
 
 
