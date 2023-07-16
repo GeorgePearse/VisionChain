@@ -34,7 +34,7 @@ postprocessor = Postprocessor([
     Thresholding(thresholds={'person': 0.5, 'car': 0.5, 'truck': 0.5, 'road': 0.5}),
     ClassAgnosticNMS(nms_threhold=0.8),
     ShapeFilter(min_width=400, min_height=400, class='car'),
-    ColourFilter(central_colour='XXX', range='XXX'),
+    ColourFilter(central_colour='XXX', range='XXX', class='car'),
     OnlyPredictInsideRegionFilter(region_defining_classes=['road'])
 ])
 ```
@@ -46,3 +46,8 @@ model = Model(
     postprocessor=postprocessor,
     class_list=class_list,
 )
+```
+
+The demo would be me using this tooling to apply foundation models to a non-coco dataset and business problem in real-time. 
+
+

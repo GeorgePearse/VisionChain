@@ -397,17 +397,18 @@
     Thresholding(thresholds={&#39;person&#39;: 0.5, &#39;car&#39;: 0.5, &#39;truck&#39;: 0.5, &#39;road&#39;: 0.5}),
     ClassAgnosticNMS(nms_threhold=0.8),
     ShapeFilter(min_width=400, min_height=400, class=&#39;car&#39;),
-    ColourFilter(central_colour=&#39;XXX&#39;, range=&#39;XXX&#39;),
+    ColourFilter(central_colour=&#39;XXX&#39;, range=&#39;XXX&#39;, class=&#39;car&#39;),
     OnlyPredictInsideRegionFilter(region_defining_classes=[&#39;road&#39;])
 ])
 </code></pre></div>
-<p>```
-model = Model(
+<div class="highlight"><pre><span></span><code>model = Model(
     preprocessor=preprocessor,
-    model_path='model.onnx',
+    model_path=&#39;model.onnx&#39;,
     postprocessor=postprocessor,
     class_list=class_list,
-)</p>
+)
+</code></pre></div>
+<p>The demo would be me using this tooling to apply foundation models to a non-coco dataset and business problem in real-time. </p>
 
 
 
