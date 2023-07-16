@@ -2,6 +2,9 @@
 
 Ensembles for object detection are rarely deployed in production, however it can be very useful to use them when labelling. 
 
+This will also be the approach used to combine heuristics with neural networks, which would definitely be sufficiently 
+resource efficient to deploy to production. 
+
 ### 
 ```python
 model = Ensemble(
@@ -38,3 +41,4 @@ model = Ensemble(
     
   ]),
 )
+```

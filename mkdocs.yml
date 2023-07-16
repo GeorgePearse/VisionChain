@@ -19,9 +19,17 @@ theme:
   
 nav:     
   - Dataset Splitting: 'index.md'
-  - Dataset Analysis: 'dataset_analysis.md'
+  - Dataset Analysis: 
+     - Heuristics: 'analysis/discovery.md'
+     - Heuristics: 'analysis/heuristics.md'
   - Utils: 'index.md'
   - Evaluation: 'index.md'
+  - Ensembles: 
+    - Ensembles: 'ensembles/ensembles.md'
+    - Aggregations: 'ensembles/aggregations.md'
+  - Active Learning: 'active-learning/active-learning.md'
+  - Heurstics: 'heurtics/heuristics.md'
+  
 
 plugins:
 - mkdocstrings:

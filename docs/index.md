@@ -22,14 +22,14 @@ With the recent development of 'foundational models', there will be huge growth 
 
 Below is a glimpse at the API: 
 
-```
+```python
 preprocessor = Preprocessor([
   NoPredictFilter(Blur(max_value=0.1)),
   NoPredictFilter(Exposure(max_value=0.7, min_value=0.2)),
 ])
 ```
 
-```
+```python
 postprocessor = Postprocessor([
     Thresholding(thresholds={'person': 0.5, 'car': 0.5, 'truck': 0.5, 'road': 0.5}),
     ClassAgnosticNMS(nms_threhold=0.8),
@@ -39,7 +39,7 @@ postprocessor = Postprocessor([
 ])
 ```
 
-```
+```python
 model = Model(
     preprocessor=preprocessor,
     model_path='model.onnx',
