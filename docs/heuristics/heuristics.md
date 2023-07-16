@@ -77,3 +77,4 @@ system
   - This is what HSV is useful for https://stackoverflow.com/questions/42882498/what-are-the-ranges-to-recognize-different-colors-in-rgb-space
   - Great post on measurement of water levels https://stackoverflow.com/questions/54950777/opencv-drawing-contours-with-various-methods-on-a-poor-image
   - https://stackoverflow.com/questions/51927948/how-can-i-extract-image-segment-with-specific-color-in-opencv
+  - Really great tutorial which covers a lot of what you'd want to include https://learnopencv.com/blob-detection-using-opencv-python-c/
