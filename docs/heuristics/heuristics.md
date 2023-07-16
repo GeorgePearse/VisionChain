@@ -74,3 +74,4 @@ system
   - Somehow include Hu Moments (how you'd recognise a circle or square)
   - Hog features and SIFT features
   - Should be able to define regions of 'colour space' (as you do when creating a colour in Microsoft Paint or similar) https://theconversation.com/how-rainbow-colour-maps-can-distort-data-and-be-misleading-16715 (rainbow-color-map)
+  - This is what HSV is useful for https://stackoverflow.com/questions/42882498/what-are-the-ranges-to-recognize-different-colors-in-rgb-space
