@@ -9,17 +9,15 @@
       
       
       
-        <link rel="prev" href="../../ensembles/aggregations/">
+        <link rel="prev" href="../../heuristics/heuristics/">
       
-      
-        <link rel="next" href="../../heuristics/heuristics/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.0">
     
     
       
-        <title>Active Learning - Vision Chain</title>
+        <title>Common Business Problems - Vision Chain</title>
       
     
     
@@ -73,7 +71,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#active-learning" class="md-skip">
+        <a href="#problems" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Active Learning
+              Common Business Problems
             
           </span>
         </div>
@@ -407,61 +405,11 @@
 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Active Learning
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../active-learning/active-learning/" class="md-nav__link">
         Active Learning
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#active-learning" class="md-nav__link">
-    Active Learning
-  </a>
-  
-    <nav class="md-nav" aria-label="Active Learning">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#online-approaches" class="md-nav__link">
-    Online Approaches
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -487,11 +435,48 @@
 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../problems/problems/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Common Business Problems
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Common Business Problems
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problems" class="md-nav__link">
+    Problems
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -521,22 +506,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#active-learning" class="md-nav__link">
-    Active Learning
+  <a href="#problems" class="md-nav__link">
+    Problems
   </a>
-  
-    <nav class="md-nav" aria-label="Active Learning">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#online-approaches" class="md-nav__link">
-    Online Approaches
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -558,21 +530,14 @@
   
 
 
-  <h1>Active Learning</h1>
+  <h1>Common Business Problems</h1>
 
-<h2 id="active-learning">Active Learning</h2>
-<p>Active learning is the problem of choosing what datapoints to label in order to most improve model performance. In most cases it boils down to trying to 
-find cases where the model is likely to fail, without requiring human input. </p>
-<p>Most research is focused on offline approaches, taking a large sample of unlabelled images, and ranking them, but often the most valuable 
-application of Active Learning is in edge deployments, with limited internet bandwidth to send data back to the cloud ready for re-training,
-and limited computational resource to run the algorithm on. </p>
-<h3 id="online-approaches">Online Approaches</h3>
-<ul>
-<li>Frame-Frame Jitter.</li>
-<li>Disagreement between constituents of an ensemble.</li>
-<li>Uncertainty based (range of scores close to the class threshold).</li>
-<li>Pre-NMS internal disagreement (e.g. both a truck and person, before NMS resolved the predictions via. Score)</li>
-</ul>
+<h2 id="problems">Problems</h2>
+<p>Many computer vision applications require a combination of models, or creative use of the outputs of one. </p>
+<ol>
+<li>License plate reading (object detection for number plate, OCR to convert to text).</li>
+<li>Count objects within a moving region. </li>
+</ol>
 
 
 

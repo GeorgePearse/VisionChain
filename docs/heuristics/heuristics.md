@@ -73,3 +73,4 @@ system
   - kornia.feature.gftt_response
   - Somehow include Hu Moments (how you'd recognise a circle or square)
   - Hog features and SIFT features
+  - Should be able to define regions of 'colour space' (as you do when creating a colour in Microsoft Paint or similar)
