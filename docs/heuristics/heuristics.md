@@ -26,9 +26,15 @@ aluminum_can = Heuristic([
       max_height=100,
   )
   Brightness(min='', max='') | Edginess(min='', max=''),
-  Cornerness(min='', max='')
+  Cornerness(min='', max=''), 
+  Circleness(min='', max=''),
+  Squareness(min='', max=''),
+  Reflectivity(min='', max=''),
+  Transparency(min='', max=''),
 ])
 ```
+
+Don't know when this becomes prohibitively slow to compute. 
 
 2 design options: 
 * Any list in a list, could be treated as an OR (I think this works?).
@@ -49,4 +55,4 @@ system
 
 - Measures (https://kornia.readthedocs.io/en/latest/feature.html): 
   - kornia.feature.gftt_response
-  - 
+  - Somehow include Hu Moments (how you'd recognise a circle or square)

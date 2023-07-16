@@ -12,5 +12,6 @@ and limited computational resource to run the algorithm on.
 * Frame-Frame Jitter.
 * Disagreement between constituents of an ensemble.
 * Uncertainty based (range of scores close to the class threshold).
+* Pre-NMS internal disagreement (e.g. both a truck and person, before NMS resolved the predictions via. Score)
 
 

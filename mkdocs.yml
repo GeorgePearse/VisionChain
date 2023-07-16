@@ -28,7 +28,7 @@ nav:
     - Ensembles: 'ensembles/ensembles.md'
     - Aggregations: 'ensembles/aggregations.md'
   - Active Learning: 'active-learning/active-learning.md'
-  - Heurstics: 'heurtics/heuristics.md'
+  - Heuristics: 'heuristics/heuristics.md'
   
 
 plugins:
