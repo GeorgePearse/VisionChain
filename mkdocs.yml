@@ -29,6 +29,7 @@ nav:
     - Aggregations: 'ensembles/aggregations.md'
   - Active Learning: 'active-learning/active-learning.md'
   - Heuristics: 'heuristics/heuristics.md'
+  - Thresholding: 'thresholding/thresholding.md'
   - Common Business Problems: 'problems/problems.md'
   
 
