@@ -31,6 +31,7 @@ nav:
   - Heuristics: 'heuristics/heuristics.md'
   - Thresholding: 'thresholding/thresholding.md'
   - Common Business Problems: 'problems/problems.md'
+  - Control Room: 'control_room.md'
   
 
 plugins:
