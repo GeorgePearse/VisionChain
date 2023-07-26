@@ -45,6 +45,7 @@ Constraining stupidity and giving AI some hand rails.
 - [ ] Profiling of speed of each step of the postprocessing.
 - [ ] Ability to analyse how each filter impacts the performance, and evaluate different combinations.
 - [ ] Support online active learning via heuristic - model disagreement
+- [ ] Support 'stop detection' via Object Tracking.
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving.
 
