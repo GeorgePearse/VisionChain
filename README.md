@@ -46,6 +46,7 @@ Constraining stupidity and giving AI some hand rails.
 - [ ] Ability to analyse how each filter impacts the performance, and evaluate different combinations.
 - [ ] Support online active learning via heuristic - model disagreement
 - [ ] Support 'stop detection' via Object Tracking.
+- [ ] Way to neatly combine a high quality generalist with a lower accuracy specialist model (more granular class list). 
 
 * Enables you to count objects in a region, even if that region, or the camera, is moving.
 
