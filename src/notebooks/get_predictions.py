@@ -42,7 +42,7 @@ def get_predictions(
         for sample in pb(dataset):
             try:
                 preds = model.predict(sample.filepath)
-
+                
                 # Convert detections to FiftyOne format
                 detections = []
                 for label, score, box in zip(
@@ -55,7 +55,7 @@ def get_predictions(
                     x1, y1, x2, y2 = box
                     rel_box = [x1 / w, y1 / h, (x2 - x1) / w, (y2 - y1) / h]
                     
-                    assert int(label) <= (len(class_list) - 1), f'Index {label} is out of class list range'
+                    #assert int(label) <= (len(class_list) - 1), f'Index {label} is out of class list range'
                     class_name = class_list[label]
                     
                     detection = fo.Detection(

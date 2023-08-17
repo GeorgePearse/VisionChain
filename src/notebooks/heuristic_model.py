@@ -11,6 +11,13 @@ class Predictions:
     scores: List[float]
     boxes: List[List[int]]
 
+EmptyPredictions = Predictions(
+    scores = [],
+    boxes = [[]],
+    labels = [],
+)
+
+
 @dataclass
 class Colour:
     upper: Tuple[int]
@@ -50,8 +57,8 @@ class HeuristicModel:
     colour: str = None
     lower_bound: List[int] = None
     upper_bound: List[int] = None
-    min_width: int = None
-    min_height: int = None
+    min_width: int = 0
+    min_height: int = 0
 
     def __post_init__(self): 
         # so that the Colour
@@ -86,7 +93,6 @@ class HeuristicModel:
             bounding_boxes = []
             for contour in contours:
                 x, y, w, h = cv2.boundingRect(contour)
-
                 if (w > 20) and (h > 20):
                     cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     if (w > self.min_width) or (h > self.min_height):
