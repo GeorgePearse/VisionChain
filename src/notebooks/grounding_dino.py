@@ -164,6 +164,6 @@ class GroundingDino:
         model, image, text_prompt, box_threshold, text_threshold, device=device
     )
     
-    return masks, boxes_filt, pred_phrases
+    return boxes_filt, pred_phrases
 
 
