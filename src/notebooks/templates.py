@@ -75,3 +75,19 @@ class RegionOfInterestFilterer:
     threshold: float 
 
     def predict(image, preds: Detections) -> Detections: 
+
+
+@dataclass
+class NearestNeighbourDetector: 
+    """
+    Uses a VectorDatabase like QDrant to 
+    classify the contents of bounding boxes. 
+
+    This enables 0 training model improvement. 
+    """
+    cropper: Cropper
+    backend: str = "QDrant"
+
+    def predict(self, file_path: str):
+        ...
+    
