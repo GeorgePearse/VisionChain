@@ -53,8 +53,7 @@ class ObjectClassifier:
     thresholds: dict
 
     def predict(image_path, preds: Detections) -> Detections:
-        for pred in preds: 
-           
+        ... 
 
 @dataclass
 class TwoStageDetector: 
@@ -66,7 +65,7 @@ class TwoStageDetector:
     object_classifier: ObjectClassifier
 
     def predict(image_path: str) -> Detections:
-        
+        ...        
 
 @datclass 
 class RegionOfInterestFilterer: 
@@ -82,9 +81,8 @@ class RegionOfInterestFilterer:
     threshold: float 
 
     def predict(image, preds: Detections) -> Detections: 
-        mask = model(image)
-        preds = 
-        return preds
+        ...
+
 
 @dataclass
 class NearestNeighbourDetector: 
