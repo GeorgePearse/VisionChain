@@ -20,7 +20,9 @@ import fiftyone.zoo as foz
 from dataclasses import dataclass
 from typing import List
 from get_predictions import get_predictions
+
 from heuristic_model import HeuristicModel
+from colour_model import ColourModel
 
 def delete_voxel_datasets():
     for dataset_name in fo.list_datasets():
@@ -29,10 +31,11 @@ def delete_voxel_datasets():
         dataset.delete()
     
 def main(
-        inference_path: str = '../../../vision-research/data/construction_and_demolition/data',
+        inference_path: str = 'datasets/quickstart', 
         view_dataset: bool = True,
         limit: int = None,
         class_name='wood',
+        colour='green',
     ):
     """
     Use a heuristic model on a the cooper dataset.
@@ -44,11 +47,7 @@ def main(
     os.system('sudo fuser -k 5151/tcp')
     delete_voxel_datasets()
 
-    model = HeuristicModel(
-        class_name=class_name,
-        colour='brown',
-        class_list=[class_name],
-    )
+    model = ColourModel()
 
     val_per_belt_dataset = fo.Dataset.from_images_dir(
         inference_path,
@@ -61,7 +60,6 @@ def main(
     dataset = get_predictions(
         model, 
         val_per_belt_dataset, 
-        class_list=[class_name],
     )
 
     if view_dataset:

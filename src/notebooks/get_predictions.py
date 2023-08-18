@@ -20,8 +20,6 @@ def get_predictions(
         class_list: list = None,
         output_key = 'predictions',
         device: str ='cpu',
-        w: int = 1920, 
-        h: int = 1080,
     ):
     
     logging.info(f"""
@@ -36,13 +34,15 @@ def get_predictions(
         so that the output of the model can be compared to the GT
         labels.
     """)
-    assert class_list is not None, 'Need to specify class list'
+    #assert class_list is not None, 'Need to specify class list'
 
     with fo.ProgressBar() as pb:
         for sample in pb(dataset):
             try:
                 preds = model.predict(sample.filepath)
-                
+                image = Image.open(sample.filepath)
+                w, h = image.size
+
                 # Convert detections to FiftyOne format
                 detections = []
                 for label, score, box in zip(
@@ -56,8 +56,11 @@ def get_predictions(
                     rel_box = [x1 / w, y1 / h, (x2 - x1) / w, (y2 - y1) / h]
                     
                     #assert int(label) <= (len(class_list) - 1), f'Index {label} is out of class list range'
-                    class_name = class_list[label]
-                    
+                    if class_list is not None:
+                        class_name = class_list[label]
+                    else: 
+                        class_name = label
+
                     detection = fo.Detection(
                         label=class_name,
                         bounding_box=rel_box,
