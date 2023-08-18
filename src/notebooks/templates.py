@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from PIL import Image
+import supervision as sv
 
 @dataclass
 class Image: 
@@ -26,6 +27,12 @@ class Image:
             self.image = Image.open(file_path)
             return self.image
 
+@dataclass
+class Model: 
+    path_to_weights: str
+
+    def predict(self, Detections) -> Detections: 
+        ...
 
 @dataclass
 class ObjectCropper:
@@ -75,7 +82,9 @@ class RegionOfInterestFilterer:
     threshold: float 
 
     def predict(image, preds: Detections) -> Detections: 
-
+        mask = model(image)
+        preds = 
+        return preds
 
 @dataclass
 class NearestNeighbourDetector: 
@@ -90,4 +99,16 @@ class NearestNeighbourDetector:
 
     def predict(self, file_path: str):
         ...
-    
+   
+
+@dataclass
+class CompositeModel: 
+    """
+    A chain of different models.
+    As long as each has the 
+    ability to take in predictions,
+    and an image, and outputs 
+    predictions, they can be arbitrarily 
+    chained together.
+    """
+    components: List[Model]
