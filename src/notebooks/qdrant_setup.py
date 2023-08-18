@@ -51,11 +51,15 @@ def main(
         file_path = os.path.join(data_path, file_name)
         detections = detector.predict(file_path)
 
+    
         for detection in detections: 
             cropped_object = Image.crop()
             inputs = processor(images=cropped_object, return_tensors="pt").to(device)
+            
+            with torch.no_grad():
+                outputs = model(**inputs).last_hidden_state.mean(dim=1).cpu().numpy()
 
-    
+    np.save("vectors", np.array(outputs), allow_pickle=False)
     
 
 if __name__ == '__main__':
