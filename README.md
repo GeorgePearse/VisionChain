@@ -25,6 +25,7 @@ Constraining stupidity and giving AI some hand rails.
 * Simple way to train detector on the feature input of several different architectures
 * Maybe raft / optical flow stuff (probably not). 
 * Edge detectors etc. in kornia, the list in 'feature' could almost all be included https://kornia.readthedocs.io/en/latest/feature.html
+* Support for both weighted classifier and just majority vote (for nearest neighbour)
 
 ## Features 
 - [ ] ROI detectors, e.g. an object detector that outpus an area, used as a filter for another detector.
