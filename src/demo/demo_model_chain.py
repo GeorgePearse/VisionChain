@@ -21,10 +21,101 @@ import time
 
 
 @dataclass
+class Predictions:
+    """
+    Predictions for one image.
+
+    Arguments
+        scores: e.g. [0.4] floats 0 -> 1.
+        boxes: [[x1, y1, x2, y2]], where all are absolute values (VOC format) e.g 0 < x < 1920.
+        labels: e.g. string representation to keep you sane! 
+    """
+
+    scores: List[float]
+    boxes: List[List[float]]
+    labels: List[str]
+    class_list: List[str]
+
+    def __post_init__(self):
+        """
+        If no coordinates are > 1, it's almost guaranteed
+        that the box format is wrong.
+
+        Can add further sanity checks.
+
+        e.g. if x2 < x1 or same for y
+        """
+        # set to 1 for [[]] e.g. for no boxes, len(boxes) == 1
+        if len(self.boxes) > 1:
+            suspect_boxes_normalized = True
+            for box in self.boxes:
+                for coord in box:
+                    if coord > 1:
+                        suspect_boxes_normalized = False
+
+            if suspect_boxes_normalized:
+                print("WARNING: looks like boxes are normalized")
+
+            if len(self.boxes[0]) != 4:
+                raise Exception(
+                    f"""
+                    Input boxes are not of length 4.
+                    Example box length is {len(self.boxes[0])}
+                """
+                )
+
+    def __len__(self) -> int:
+        return len(self.labels)
+
+    def from_supervision(
+            detections: sv.Detections, 
+            class_list: List[str]
+        ): 
+        labels=[class_list[x] for x in detections.class_id.tolist()]
+        return Predictions(
+            boxes=detections.xyxy.tolist(),
+            labels=labels,
+            scores=detections.confidence.tolist(),
+            class_list=class_list,
+        )
+
+    def to_supervision(self) -> sv.Detections:
+        class_id = np.array([
+            self.class_list.index(x) for x in self.labels
+        ])
+        return sv.Detections(
+            xyxy=np.array(self.boxes),
+            class_id=class_id,
+            confidence=np.array(self.scores),
+        )
+
+    def to_dataframe(self) -> pd.core.frame.DataFrame:
+        return pd.DataFrame(
+            {
+                "labels": self.labels,
+                "boxes": self.boxes,
+                "scores": self.scores,
+                'class_names': self.class_names
+            }
+        )
+
+    @staticmethod
+    def from_dataframe(df: DataFrame):
+        return Predictions(
+            labels=df["labels"].tolist(),
+            boxes=df["boxes"].tolist(),
+            scores=df["scores"].tolist(),
+            class_names=df['class_names'].tolist()[0],
+        )
+
+    
+
+@dataclass
 class Model:
     """
     Just a thing which predicts
     """
+    #class_list: List[str]
 
     def predict(self, file_path: str) -> sv.Detections:
         pass
@@ -46,10 +137,10 @@ class SpeculativePrediction:
 
     chain_start: bool = False
 
-    confident_detections: sv.Detections = None
+    confident_detections: Predictions = None
 
     # hit if there's a downstream classifier
-    reclassify_detections: sv.Detections = None
+    reclassify_detections: Predictions = None
 
     # hit if there's a downstream Detector
     repredict_whole_frame: bool = False
@@ -64,7 +155,7 @@ class UltralyticsDetector(Model):
     Should better generalise this.
     """
     model_family: str
-    model_weights: str 
+    model_weights: str
 
     def __post_init__(self):
         model_family_from_string = {
@@ -89,6 +180,10 @@ class UltralyticsDetector(Model):
             'yolo_nas_l.pt'
         ]
 
+        assert self.model_weights not in nas_models, (
+            'NAS model weights havent worked when tested'
+        )
+
         supported_models = yolo_models + rtdetr_models + nas_models
 
         assert self.model_weights in supported_models, (
@@ -98,15 +193,14 @@ class UltralyticsDetector(Model):
             self.model_family
         ](self.model_weights)
 
-    def predict(self, file_paths: List[str]) -> sv.Detections:
-        # ultralytics format
-        # Use to have stream=False
-        # but changed after code complained about
-        # a generator
+    def predict(self, file_paths: List[str]) -> Predictions:
         predictions = self.model(file_paths, stream=False)
         detections = sv.Detections.from_ultralytics(predictions[0])
-        print("SUCCESSFUL CONVERSION")
-        return detections
+        predictions = Predictions.from_supervision(
+            detections,
+            list(predictions[0].names.values()),
+        )
+        return predictions
 
 
 @dataclass
@@ -180,12 +274,6 @@ class ModelChain(Model):
             end = time.time()
             elapsed = end - start
             if self.log_level == "verbose":
-                detail = {
-                    'model_name': conditional_model.name,
-                    'condition_triggered': conditional_model.condition_triggered,
-                    'time_taken': elapsed,
-                }
-                print(detail)
                 print(
                     f"Preds with {conditional_model.name} took {elapsed}. Condition triggered: {conditional_model.condition_triggered}"
                 )
@@ -201,7 +289,8 @@ class GroundedSamDetector:
         self.model = GroundedSAM(ontology=CaptionOntology(self.ontology))
 
     def predict(self, file_path: str) -> sv.Detections:
-        return self.model.predict(file_path)
+        detections = self.model.predict(file_path)
+        return Predictions.from_supervision(detections, list(self.ontology.values()))
 
 
 @dataclass
@@ -220,13 +309,9 @@ class FastBase(ConditionalModel):
         # bit of a fake / meaningless line
         self.match(detections)
 
-        print("Got preds from yolo")
-
         repredict_whole_frame = UncertaintyRejection(
             confidence_trigger=0.1,
         ).evaluate(detections)
-
-        print("got reprediction result")
 
         return SpeculativePrediction(
             confident_detections=detections,
@@ -269,10 +354,6 @@ def main(
     fast_base = UltralyticsDetector(
         model_family='YOLO',
         model_weights='yolov8n.pt',
-        #model_family='NAS', # didn't work
-        #model_weights='yolo_nas_s.pt', # didn't work
-        #model_family='RTDETR', # worked 
-        #model_weights='rtdetr-l.pt', #worked
     )
     grounded_sam = GroundedSamDetector(
         ontology={
