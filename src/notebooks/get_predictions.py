@@ -13,7 +13,6 @@ from vision.tools.predictions import (
 from typing import List, Tuple
 
 
-
 def get_predictions(
         model,
         dataset,
@@ -43,6 +42,8 @@ def get_predictions(
                 image = Image.open(sample.filepath)
                 w, h = image.size
 
+                #print(preds)
+                
                 # Convert detections to FiftyOne format
                 detections = []
                 for label, score, box in zip(
