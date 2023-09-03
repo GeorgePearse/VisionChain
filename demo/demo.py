@@ -12,13 +12,15 @@ def main(
     """
 
     hf_embedder = vc.HFEmbedder(
-        model_name="facebook/dino-vits16", preprocessor_name="facebook/dino-vits16"
+        model_name="facebook/dino-vits16", 
+        preprocessor_name="facebook/dino-vits16",
+        device='cuda',
     )
 
     classifier = vc.Classifier(
         embedder=hf_embedder,
-        client=QDrantClient("qdrant.db"),
-        name="vision_chain_classifier",
+        client=QdrantClient("qdrant.db"),
+        collection_name="vision_chain_classifier",
     )
 
     fast_base = vc.UltralyticsDetector(
