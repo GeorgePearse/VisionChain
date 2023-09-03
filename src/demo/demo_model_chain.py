@@ -11,12 +11,14 @@ import os
 from PIL import Image
 import fiftyone as fo
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from ultralytics import YOLO
 import supervision as sv
 from typing import Tuple, Dict
 from get_predictions import get_predictions
-import rich
+from rich import print
+import time
+
 
 @dataclass
 class Model:
@@ -52,7 +54,7 @@ class SpeculativePrediction:
     # hit if there's a downstream Detector
     repredict_whole_frame: bool = False
 
-    # just whether the last model ran or not
+    # just whether the last model ran or not
     triggered: bool = None
 
 
@@ -67,28 +69,26 @@ class YoloDetector:
 
     def predict(self, file_paths: List[str]) -> sv.Detections:
         # ultralytics format
-        # Use to have stream=False
-        # but changed after code complained about 
-        # a generator
+        # Use to have stream=False
+        # but changed after code complained about
+        # a generator
         predictions = self.model(file_paths, stream=False)
-        import pdb; pdb.set_trace()
-        return sv.Detections.from_ultralytics(predictions)
+        detections = sv.Detections.from_ultralytics(predictions[0])
+        print("SUCCESSFUL CONVERSION")
+        return detections
 
 
 @dataclass
 class Condition:
-    def evaluate(detections: sv.Detections) -> Tuple[sv.Detections, sv.Detections]:
-        return (
-            accepted,
-            rejected,
-        )
+    def evaluate(detections: sv.Detections) -> bool:
+        pass
 
 
 @dataclass
-class UncertaintyRejection:
+class UncertaintyRejection(Condition):
     confidence_trigger: float
 
-    def evaluate(detections: sv.Detections) -> bool:
+    def evaluate(self, detections: sv.Detections) -> bool:
         filtered_detections = detections[
             detections.confidence > self.confidence_trigger
         ]
@@ -101,8 +101,12 @@ class UncertaintyRejection:
 @dataclass
 class ConditionalModel:
     model: Model
+    name: str
+    condition_triggered: bool = field(default=False, init=False)
 
-    def match(speculative_prediction: SpeculativePrediction) -> SpeculativePrediction:
+    def match(
+        self, speculative_prediction: SpeculativePrediction
+    ) -> SpeculativePrediction:
         """
         When the model should be called.
         In terms of attributes of the speculative
@@ -124,7 +128,6 @@ class ConditionalModel:
 class ModelChain(Model):
     conditional_models: List[ConditionalModel]
     log_level: str
-    inference_run_details: list
 
     def predict(self, file_path: str) -> sv.Detections:
         """
@@ -140,20 +143,22 @@ class ModelChain(Model):
         for conditional_model in self.conditional_models:
             start = time.time()
             speculative_predictions = conditional_model.speculate(
-                file_path, 
+                file_path,
                 speculative_predictions,
             )
             end = time.time()
             elapsed = end - start
-            run_details = {
-                'model': conditional_model,
-                'time': elapsed,
-                'filepath': file_path,
-            }
-            self.inference_run_details.append(run_details)
-            print(f'Preds with {condtional_model.name} took {elapsed}')
+            if self.log_level == "verbose":
+                detail = {
+                    'model_name': conditional_model.name,
+                    'condition_triggered': conditional_model.condition_triggered,
+                    'time_taken': elapsed,
+                }
+                print(detail)
+                print(
+                    f"Preds with {conditional_model.name} took {elapsed}. Condition triggered: {conditional_model.condition_triggered}"
+                )
 
-        print(self.inference_run_details)
         return speculative_predictions.confident_detections
 
 
@@ -162,7 +167,6 @@ class GroundedSamDetector:
     ontology: Dict[str, str]
 
     def __post_init__(self):
-        
         self.model = GroundedSAM(ontology=CaptionOntology(self.ontology))
 
     def predict(self, file_path: str) -> sv.Detections:
@@ -171,11 +175,8 @@ class GroundedSamDetector:
 
 @dataclass
 class FastBase(ConditionalModel):
-    model: Model
-    name: str
-
-    def match(speculative_prediction: SpeculativePrediction) -> bool:
-        return True
+    def match(self, speculative_prediction: SpeculativePrediction) -> bool:
+        self.condition_triggered = True
 
     def speculate(
         self, file_path: str, speculative_prediction: SpeculativePrediction
@@ -185,41 +186,50 @@ class FastBase(ConditionalModel):
         """
         detections = self.model.predict(file_path)
 
+        # bit of a fake / meaningless line
+        self.match(detections)
+
+        print("Got preds from yolo")
+
         repredict_whole_frame = UncertaintyRejection(
             confidence_trigger=1,
-        ).evaluate()
+        ).evaluate(detections)
+
+        print("got reprediction result")
 
         return SpeculativePrediction(
             confident_detections=detections,
-            reclassify_detections=sv.Detections(),  # empty detection
+            reclassify_detections=None,  # empty detection
             repredict_whole_frame=repredict_whole_frame,
         )
 
 
 @dataclass
 class AccurateFallback(ConditionalModel):
-    model: Model
-    name: str 
-
-    def match(speculative_prediction: SpeculativePrediction) -> bool:
+    def match(self, speculative_prediction: SpeculativePrediction) -> bool:
         if speculative_prediction.repredict_whole_frame:
-            return True
-        else:
-            return False
+            self.condition_triggered = True
 
     def speculate(
         self, file_path: str, speculative_prediction: SpeculativePrediction
     ) -> SpeculativePrediction:
         """ """
-        detections = self.model.predict(file_path)
+        self.match(speculative_prediction)
 
-        return SpeculativePrediction(
-            confident_detections=detections,
-        )
+        if self.condition_triggered:
+            detections = self.model.predict(file_path)
+
+            return SpeculativePrediction(
+                confident_detections=detections,
+                reclassify_detections=None,
+                repredict_whole_frame=False,
+            )
+        else:
+            return speculative_prediction
 
 
 def main(
-    limit: int = None,
+    limit: int = 100,
 ):
     """
     GroundedSAM to crop then DINO + QDrant to classify!
@@ -227,7 +237,7 @@ def main(
 
     fast_base = YoloDetector()
     grounded_sam = GroundedSamDetector(
-        ontology = {
+        ontology={
             "plastic bottle": "bottle",
             "glass bottle": "bottle",
             "wine bottle": "bottle",
@@ -252,19 +262,19 @@ def main(
         os.path.join(dir_path, file_name) for file_name in os.listdir(dir_path)
     ]
 
+    if limit:
+        file_paths = file_paths[:limit]
+
     # Could also call this a model chain???
-    model = ModelChain([
-        FastBase(model=fast_base, name='fast_base'),
-        AccurateFallback(model=grounded_sam, name='grounded_sam'),
-    ],
-        log_level='verbose',
+    model = ModelChain(
+        [
+            FastBase(model=fast_base, name="fast_base"),
+            AccurateFallback(model=grounded_sam, name="grounded_sam"),
+        ],
+        log_level="verbose",
     )
-    
-    dataset = fo.Dataset.from_images_dir(dir_path)
 
-    if limit: 
-        dataset = dataset[:limit].clone()
-
+    dataset = fo.Dataset.from_images(file_paths)
     dataset = get_predictions(dataset, model)
 
     session = fo.launch_app(dataset, remote=True, address="0.0.0.0", desktop=True)
