@@ -15,8 +15,8 @@ from typing import List, Tuple
 
 
 def get_predictions(
-        model,
         dataset,
+        model,
         class_list: list = None,
         output_key = 'predictions',
         device: str ='cpu',
@@ -42,6 +42,8 @@ def get_predictions(
                 preds = model.predict(sample.filepath)
                 image = Image.open(sample.filepath)
                 w, h = image.size
+
+                import pdb; pdb.set_trace()
 
                 # Convert detections to FiftyOne format
                 detections = []

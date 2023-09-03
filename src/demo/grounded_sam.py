@@ -18,7 +18,7 @@ def main(
     # the ontology dictionary has the format {caption: class}
     # where caption is the prompt sent to the base model, and class is the label that will
     # be saved for that caption in the generated annotations
-    ONTOLOGY = {
+     ONTOLOGY = {
         "plastic bottle": "bottle",
         'glass bottle': 'bottle',
         'wine bottle': 'bottle',
@@ -38,7 +38,7 @@ def main(
     }
 
     base_model = GroundedSAM(ontology=CaptionOntology(ONTOLOGY))
-    #class_list = list(set(ONTOLOGY.keys()))
+   #class_list = list(set(ONTOLOGY.keys()))
     class_list = list(ONTOLOGY.keys())
 
     dir_path = "/home/ubuntu/VisionChain/src/demo/bottles_dataset/data"
