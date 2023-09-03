@@ -13,6 +13,7 @@ import fiftyone as fo
 from typing import List
 from dataclasses import dataclass
 from ultralytics import YOLO
+import supervision as sv
 
 
 @dataclass
