@@ -31,7 +31,7 @@ def delete_voxel_datasets():
         dataset.delete()
     
 def main(
-        inference_path: str = '/home/ubuntu/VisionChain/src/demo/bottles_dataset/data', 
+        video_path: str = 'bottle_counter/bottles.mp4',
         view_dataset: bool = True,
         limit: int = None,
         class_name='wood',
@@ -40,30 +40,37 @@ def main(
     """
     Use a heuristic model on a the cooper dataset.
     """
-    assert os.path.exists(inference_path), 'Path does not exist'
+    assert os.path.exists(video_path), 'Path does not exist'
+
+    os.system('sudo fuser -k 5151/tcp')
 
     # sometimes voxdl51 breaks, this is the easiest way to make sure 
     # it will be working
-    os.system('sudo fuser -k 5151/tcp')
     delete_voxel_datasets()
 
-    model = ColourModel()
+    model = ColourModel(
+        min_width=5,
+        min_height=5,
+    )
 
-    val_per_belt_dataset = fo.Dataset.from_images_dir(
-        inference_path,
+    # not sure about the to_frames() bit 
+    dataset = fo.Dataset.from_videos(
+        [video_path],
     ).shuffle()
+
+    dataset = dataset.to_frames(sample_frames=True).clone()
 
     if limit: 
         val_per_belt_dataset = val_per_belt_dataset[:limit].clone()
 
     # use_nms should normally be set to False for thresholding.
-    dataset = get_predictions(
+    labelled_dataset = get_predictions(
         model, 
-        val_per_belt_dataset, 
+        dataset, 
     )
 
     if view_dataset:
-        session = fo.launch_app(dataset, remote=True, address="0.0.0.0", desktop=True)
+        session = fo.launch_app(labelled_dataset, remote=True, address="0.0.0.0", desktop=True)
         session.wait()
 
 

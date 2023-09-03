@@ -59,8 +59,12 @@ class ColourModel:
             # Load the image
             image = cv2.imread(image_path)
 
+            # makes the masks a little less noisy
+            # https://dev.to/erol/object-detection-with-color-knl
+            blurred_image = cv2.GaussianBlur(image, (11,11), 0)
+            
             # Convert the image to the HSV color space
-            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            hsv = cv2.cvtColor(blurred_image, cv2.COLOR_BGR2HSV)
             boxes = []
             labels = []
             scores = []
@@ -71,8 +75,13 @@ class ColourModel:
                 lower_value = np.array(colour.lower)
                 upper_value = np.array(colour.upper)
 
-                # Create a mask for white regions
+                # Create a mask for coloured regions
                 mask = cv2.inRange(hsv, lower_value, upper_value)
+                
+                # deleting noises which are in area of mask
+                # from https://dev.to/erol/object-detection-with-color-knl
+                mask = cv2.erode(mask, None, iterations=2)
+                mask = cv2.dilate(mask, None, iterations=2)
 
                 # Find contours in the mask
                 contours, _ = cv2.findContours(
@@ -83,15 +92,14 @@ class ColourModel:
                 bounding_boxes = []
                 for contour in contours:
                     x, y, w, h = cv2.boundingRect(contour)
-                    if (w > 20) and (h > 20):
+                    if (w > self.min_width) and (h > self.min_height):
                         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                        if (w > self.min_width) or (h > self.min_height):
-                            bounding_box = [x, y, x + w, y + h]
-                            bounding_boxes.append(bounding_box)
+                        bounding_box = [x, y, x + w, y + h]
+                        bounding_boxes.append(bounding_box)
 
-                            boxes.append(bounding_box)
-                            labels.append(colour_name)
-                            scores.append(1)
+                        boxes.append(bounding_box)
+                        labels.append(colour_name)
+                        scores.append(1)
 
                 
             if len(bounding_boxes) != 0:
