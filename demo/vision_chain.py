@@ -7,18 +7,17 @@ import fiftyone as fo
 import pandas as pd
 import super_gradients
 import supervision as sv
+import torch
 import typer
 from autodistill.detection import CaptionOntology
 from autodistill_grounded_sam import GroundedSAM
 from autodistill_yolov8 import YOLOv8
 from PIL import Image
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 from rich import print
-from super_gradients.common.object_names import Models
-from super_gradients.training import models
 from tqdm import tqdm
 from ultralytics import NAS, RTDETR, YOLO
-
+from transformers import ViTImageProcessor, ViTModel
 from get_predictions import get_predictions
 
 
@@ -361,15 +360,16 @@ class Embedder:
 class HFEmbedder(Embedder):
     preprocessor_name: str
     model_name: str
+    device: str 
 
     def __post_init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.processor = ViTImageProcessor.from_pretrained(self.preprocessor_name)
-        self.model = ViTModel.from_pretrained(self.model_name).to(device)
+        self.model = ViTModel.from_pretrained(self.model_name).to(self.device)
 
     def embed(self, file_path: str) -> List[float]:
         image = Image.open(filepath)
-        inputs = processor(images=image, return_tensors="pt").to(device)
+        inputs = processor(images=image, return_tensors="pt").to(self.device)
 
         with torch.no_grad():
             embeddings = model(**inputs).last_hidden_state[0][0]
@@ -406,7 +406,7 @@ class Classifier:
         self.client.upsert(
             collection_name=collection_name,
             points=[
-                PointStruct(
+                models.PointStruct(
                     id=idx,
                     vector=embedding,
                     payload={
