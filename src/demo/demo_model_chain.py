@@ -12,7 +12,7 @@ from PIL import Image
 import fiftyone as fo
 from typing import List
 from dataclasses import dataclass, field
-from ultralytics import YOLO
+from ultralytics import YOLO, RTDETR, NAS
 import supervision as sv
 from typing import Tuple, Dict
 from get_predictions import get_predictions
@@ -59,13 +59,44 @@ class SpeculativePrediction:
 
 
 @dataclass
-class YoloDetector:
+class UltralyticsDetector(Model):
     """
     Should better generalise this.
     """
+    model_family: str
+    model_weights: str 
 
     def __post_init__(self):
-        self.model = YOLO("yolov8n.pt")  # pretrained YOLOv8n model
+        model_family_from_string = {
+            'RTDETR': RTDETR,
+            'YOLO': YOLO,
+            'NAS': NAS,
+        }
+        yolo_models = [
+            'yolov8n.pt',
+            'yolov8s.pt',
+            'yolov8m.pt',
+            'yolov8l.pt',
+            'yolov8x.pt',
+        ]
+        rtdetr_models = [
+            'rtdetr-l.pt',
+            'rtdetr-x.pt',
+        ]
+        nas_models = [
+            'yolo_nas_s.pt',
+            'yolo_nas_m.pt',
+            'yolo_nas_l.pt'
+        ]
+
+        supported_models = yolo_models + rtdetr_models + nas_models
+
+        assert self.model_weights in supported_models, (
+            f'Requested model {self.model_weights} not supported'
+        )
+        self.model = model_family_from_string[
+            self.model_family
+        ](self.model_weights)
 
     def predict(self, file_paths: List[str]) -> sv.Detections:
         # ultralytics format
@@ -235,7 +266,10 @@ def main(
     GroundedSAM to crop then DINO + QDrant to classify!
     """
 
-    fast_base = YoloDetector()
+    fast_base = UltralyticsDetector(
+        model_family='YOLO',
+        model_weights='yolov8n.pt',
+    )
     grounded_sam = GroundedSamDetector(
         ontology={
             "plastic bottle": "bottle",
