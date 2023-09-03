@@ -14,7 +14,7 @@ from typing import List
 from dataclasses import dataclass, field
 from ultralytics import YOLO, RTDETR, NAS
 import supervision as sv
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 from get_predictions import get_predictions
 from rich import print
 import time
@@ -223,7 +223,7 @@ class FastBase(ConditionalModel):
         print("Got preds from yolo")
 
         repredict_whole_frame = UncertaintyRejection(
-            confidence_trigger=1,
+            confidence_trigger=0.1,
         ).evaluate(detections)
 
         print("got reprediction result")
@@ -269,6 +269,10 @@ def main(
     fast_base = UltralyticsDetector(
         model_family='YOLO',
         model_weights='yolov8n.pt',
+        #model_family='NAS', # didn't work
+        #model_weights='yolo_nas_s.pt', # didn't work
+        #model_family='RTDETR', # worked 
+        #model_weights='rtdetr-l.pt', #worked
     )
     grounded_sam = GroundedSamDetector(
         ontology={
