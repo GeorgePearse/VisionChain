@@ -431,12 +431,36 @@ class Classifier:
         return self.aggregate(predictions)
 
 
+    @staticmethod
+    def aggregate(
+        predictions: List[ClassificationPrediction], method="majority"
+    ) -> ClassificationPrediction:
+        if method == "majority":
+            neighbour_labels = [prediction.name for prediction in predictions]
+            return max(set(neighbour_labels), key=neighbour_labels.count)
+
+        if method == "weighted":
+            raise Exception("Weighted aggregate not yet implemented")
+
+
 def main(
     limit: int = 100,
 ):
     """
     GroundedSAM to crop then DINO + QDrant to classify!
     """
+    qdrant_client = DrantClient('qdrant.db')
+
+    hf_embedder = HFEmbedder(
+        model_name = 'facebook/dino-vits16',
+        preprocessor_name = 'facebook/dino-vits16'
+    )
+
+    vector_db_classifier(
+        embedder=hf_embedder,
+        client=qdrant_client,
+        name='vision_chain_classifier',
+    )
 
     fast_base = UltralyticsDetector(
         model_family="YOLO",
