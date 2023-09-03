@@ -18,7 +18,7 @@ from typing import Tuple, Dict, List
 from get_predictions import get_predictions
 from rich import print
 import time
-
+import pandas as pd
 
 @dataclass
 class Predictions:
@@ -89,23 +89,23 @@ class Predictions:
             confidence=np.array(self.scores),
         )
 
-    def to_dataframe(self) -> pd.core.frame.DataFrame:
+    def to_dataframe(self) -> pd.DataFrame:
         return pd.DataFrame(
             {
                 "labels": self.labels,
                 "boxes": self.boxes,
                 "scores": self.scores,
-                'class_names': self.class_names
+                'class_list': [self.class_list] * len(self.labels),
             }
         )
 
     @staticmethod
-    def from_dataframe(df: DataFrame):
+    def from_dataframe(df: pd.DataFrame):
         return Predictions(
             labels=df["labels"].tolist(),
             boxes=df["boxes"].tolist(),
             scores=df["scores"].tolist(),
-            class_names=df['class_names'].tolist()[0],
+            class_list=df['class_list'].tolist()[0],
         )
 
     
@@ -213,11 +213,14 @@ class Condition:
 class UncertaintyRejection(Condition):
     confidence_trigger: float
 
-    def evaluate(self, detections: sv.Detections) -> bool:
-        filtered_detections = detections[
-            detections.confidence > self.confidence_trigger
+    def evaluate(self, predictions: Predictions) -> bool:
+        predictions_df = predictions.to_dataframe()
+        filtered_df = predictions_df[
+            predictions_df.scores > 0.5
         ]
-        if len(filtered_detections) == 0:
+        filtered_predictions = Predictions.from_dataframe(filtered_df)
+
+        if len(filtered_predictions) == 0:
             return False
         else:
             return True
@@ -290,6 +293,8 @@ class GroundedSamDetector:
 
     def predict(self, file_path: str) -> sv.Detections:
         detections = self.model.predict(file_path)
+        # Quick patch fix
+        detections = detections.with_nms(class_agnostic=True)
         return Predictions.from_supervision(detections, list(self.ontology.values()))
 
 
