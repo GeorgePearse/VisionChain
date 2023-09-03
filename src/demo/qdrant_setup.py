@@ -87,10 +87,10 @@ def main(
 
             embeddings[file_name][str(absolute_box)] = outputs
 
-    np.save("vectors", np.array(embeddings), allow_pickle=False)
+    np.save("vectors", np.array(embeddings), allow_pickle=True)
     
     batch_size = 1000
-
+    print('Uploading embeddings to Qrant')
     for i in range(0, len(embeddings), batch_size):
 
         low_idx = min(i+batch_size, len(embeddings))
@@ -104,7 +104,7 @@ def main(
             points=models.Batch(
                 ids=batch_of_filenames,
                 vectors=batch_of_embs,
-                payloads=batch_of_payloads
+                #payloads=batch_of_payloads
             )
         )
 
