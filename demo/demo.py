@@ -45,7 +45,7 @@ def main(
         }
     )
 
-    dir_path = "/home/ubuntu/VisionChain/src/demo/bottles_dataset/data"
+    dir_path = "/home/ubuntu/VisionChain/data/bottles_dataset/data"
     file_paths = [
         os.path.join(dir_path, file_name) for file_name in os.listdir(dir_path)
     ]
@@ -53,15 +53,11 @@ def main(
     if limit:
         file_paths = file_paths[:limit]
 
-    # Could also call this a model chain???
-    model = vc.ModelChain(
-        [
-            FastBase(model=fast_base, name="fast_base"),
-            AccurateFallback(model=grounded_sam, name="grounded_sam"),
-            Classifier()
-        ],
-        log_level="verbose",
-    )
+    model = vc.ModelChain([
+        vc.FastBase(model=fast_base, name="fast_base"),
+        vc.AccurateFallback(model=grounded_sam, name="grounded_sam"),
+        vc.Classifier(model=classifier, name='qdrant_classifier'),
+    ])
 
     dataset = fo.Dataset.from_images(file_paths)
     dataset = get_predictions(dataset, model)

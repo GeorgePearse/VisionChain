@@ -19,7 +19,7 @@ from get_predictions import get_predictions
 from rich import print
 import time
 import pandas as pd
-
+from qdrant_client import QdrantClient
 
 @dataclass
 class Predictions:
@@ -103,6 +103,12 @@ class Predictions:
             scores=df["scores"].tolist(),
             class_list=df["class_list"].tolist()[0],
         )
+
+
+@dataclass
+class ClassificationPrediction:
+    name: str 
+    score: float
 
 
 @dataclass
@@ -425,7 +431,7 @@ class Classifier:
 
         predictions = []
         for hit in hits:
-            prediction = Prediction(
+            prediction = ClassificationPrediction(
                 name=hit.payload["label"]["label"],
                 score=hit.score,
             )
