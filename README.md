@@ -23,6 +23,7 @@ Constraining stupidity and giving AI some hand rails.
 * Quaterion for similarity learning of the classifier in a CompositeDetector.
 * Multiple off-the-shelf-models combined (langchain style, gives the name).
 * Simple way to train detector on the feature input of several different architectures
+      * Multi-distill.
 * Maybe raft / optical flow stuff (probably not). 
 * Edge detectors etc. in kornia, the list in 'feature' could almost all be included https://kornia.readthedocs.io/en/latest/feature.html
 * Support for both weighted classifier and just majority vote (for nearest neighbour)
