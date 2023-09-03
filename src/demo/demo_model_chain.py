@@ -20,6 +20,7 @@ from rich import print
 import time
 import pandas as pd
 
+
 @dataclass
 class Predictions:
     """
@@ -28,7 +29,7 @@ class Predictions:
     Arguments
         scores: e.g. [0.4] floats 0 -> 1.
         boxes: [[x1, y1, x2, y2]], where all are absolute values (VOC format) e.g 0 < x < 1920.
-        labels: e.g. string representation to keep you sane! 
+        labels: e.g. string representation to keep you sane!
     """
 
     scores: List[float]
@@ -67,11 +68,8 @@ class Predictions:
     def __len__(self) -> int:
         return len(self.labels)
 
-    def from_supervision(
-            detections: sv.Detections, 
-            class_list: List[str]
-        ): 
-        labels=[class_list[x] for x in detections.class_id.tolist()]
+    def from_supervision(detections: sv.Detections, class_list: List[str]):
+        labels = [class_list[x] for x in detections.class_id.tolist()]
         return Predictions(
             boxes=detections.xyxy.tolist(),
             labels=labels,
@@ -80,9 +78,7 @@ class Predictions:
         )
 
     def to_supervision(self) -> sv.Detections:
-        class_id = np.array([
-            self.class_list.index(x) for x in self.labels
-        ])
+        class_id = np.array([self.class_list.index(x) for x in self.labels])
         return sv.Detections(
             xyxy=np.array(self.boxes),
             class_id=class_id,
@@ -95,7 +91,7 @@ class Predictions:
                 "labels": self.labels,
                 "boxes": self.boxes,
                 "scores": self.scores,
-                'class_list': [self.class_list] * len(self.labels),
+                "class_list": [self.class_list] * len(self.labels),
             }
         )
 
@@ -105,17 +101,17 @@ class Predictions:
             labels=df["labels"].tolist(),
             boxes=df["boxes"].tolist(),
             scores=df["scores"].tolist(),
-            class_list=df['class_list'].tolist()[0],
+            class_list=df["class_list"].tolist()[0],
         )
 
-    
 
 @dataclass
 class Model:
     """
     Just a thing which predicts
     """
-    #class_list: List[str]
+
+    # class_list: List[str]
 
     def predict(self, file_path: str) -> sv.Detections:
         pass
@@ -154,44 +150,39 @@ class UltralyticsDetector(Model):
     """
     Should better generalise this.
     """
+
     model_family: str
     model_weights: str
 
     def __post_init__(self):
         model_family_from_string = {
-            'RTDETR': RTDETR,
-            'YOLO': YOLO,
-            'NAS': NAS,
+            "RTDETR": RTDETR,
+            "YOLO": YOLO,
+            "NAS": NAS,
         }
         yolo_models = [
-            'yolov8n.pt',
-            'yolov8s.pt',
-            'yolov8m.pt',
-            'yolov8l.pt',
-            'yolov8x.pt',
+            "yolov8n.pt",
+            "yolov8s.pt",
+            "yolov8m.pt",
+            "yolov8l.pt",
+            "yolov8x.pt",
         ]
         rtdetr_models = [
-            'rtdetr-l.pt',
-            'rtdetr-x.pt',
+            "rtdetr-l.pt",
+            "rtdetr-x.pt",
         ]
-        nas_models = [
-            'yolo_nas_s.pt',
-            'yolo_nas_m.pt',
-            'yolo_nas_l.pt'
-        ]
+        nas_models = ["yolo_nas_s.pt", "yolo_nas_m.pt", "yolo_nas_l.pt"]
 
-        assert self.model_weights not in nas_models, (
-            'NAS model weights havent worked when tested'
-        )
+        assert (
+            self.model_weights not in nas_models
+        ), "NAS model weights havent worked when tested"
 
         supported_models = yolo_models + rtdetr_models + nas_models
 
-        assert self.model_weights in supported_models, (
-            f'Requested model {self.model_weights} not supported'
-        )
-        self.model = model_family_from_string[
-            self.model_family
-        ](self.model_weights)
+        assert (
+            self.model_weights in supported_models
+        ), f"Requested model {self.model_weights} not supported"
+        self.model = model_family_from_string[self.model_family](self.model_weights)
 
     def predict(self, file_paths: List[str]) -> Predictions:
         predictions = self.model(file_paths, stream=False)
@@ -215,9 +206,7 @@ class UncertaintyRejection(Condition):
 
     def evaluate(self, predictions: Predictions) -> bool:
         predictions_df = predictions.to_dataframe()
-        filtered_df = predictions_df[
-            predictions_df.scores > 0.5
-        ]
+        filtered_df = predictions_df[predictions_df.scores > 0.5]
         filtered_predictions = Predictions.from_dataframe(filtered_df)
 
         if len(filtered_predictions) == 0:
@@ -293,7 +282,7 @@ class GroundedSamDetector:
 
     def predict(self, file_path: str) -> sv.Detections:
         detections = self.model.predict(file_path)
-        # Quick patch fix
+        # Quick patch fix
         detections = detections.with_nms(class_agnostic=True)
         return Predictions.from_supervision(detections, list(self.ontology.values()))
 
@@ -349,16 +338,133 @@ class AccurateFallback(ConditionalModel):
             return speculative_prediction
 
 
+@dataclass
+class Embedder:
+    def embed(self, file_path: str):
+        pass
+
+
+@dataclass
+class HFEmbedder(Embedder):
+    preprocessor_name: str
+    model_name: str
+
+    def __post_init__(self):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.processor = ViTImageProcessor.from_pretrained(self.preprocessor_name)
+        self.model = ViTModel.from_pretrained(self.model_name).to(device)
+
+    def embed(self, file_path: str) -> List[float]:
+        image = Image.open(filepath)
+        inputs = processor(images=image, return_tensors="pt").to(device)
+
+        with torch.no_grad():
+            embeddings = model(**inputs).last_hidden_state[0][0]
+
+        return embeddings
+
+
+@dataclass
+class Classifier:
+    collection_name: str
+    client: QdrantClient
+    embedder: Embedder
+
+    def __post_init__(self):
+        self.client.recreate_collection(
+            collection_name=self.collection_name,
+            vectors_config=models.VectorParams(
+                size=384, distance=models.Distance.COSINE
+            ),
+        )
+
+    def train(self, train_dataset: fo.Dataset):
+        """
+        Just needs to run inference over all of the objects.
+        Make it very easy to plug and play different models
+        into this.
+        """
+        embeddings = []
+        for filepath in tqdm(train_dataset.values("filepath")):
+            embedding = embedder.embed(filepath)
+            # print(len(embedding))
+            embeddings.append(embedding)
+
+        self.client.upsert(
+            collection_name=collection_name,
+            points=[
+                PointStruct(
+                    id=idx,
+                    vector=embedding,
+                    payload={
+                        "file_path": file_path,
+                        "label": label,
+                    },
+                )
+                for idx, (vector, file_path, label) in enumerate(
+                    zip(
+                        embeddings,
+                        object_dataset.values("filepath"),
+                        object_dataset.values("ground_truth"),
+                    )
+                )
+            ],
+        )
+
+    def predict(
+        self, query_image_path: str, num_nearest_neighbours: int = 5
+    ) -> ClassificationPrediction:
+        hits = self.client.search(
+            collection_name=collection_name,
+            query_vector=get_embeddings(query_image_path).tolist()[0][0],
+            limit=num_nearest_neighbours,
+        )
+
+        predictions = []
+        for hit in hits:
+            prediction = Prediction(
+                name=hit.payload["label"]["label"],
+                score=hit.score,
+            )
+            predictions.append(prediction)
+
+        return self.aggregate(predictions)
+
+
+    @staticmethod
+    def aggregate(
+        predictions: List[ClassificationPrediction], method="majority"
+    ) -> ClassificationPrediction:
+        if method == "majority":
+            neighbour_labels = [prediction.name for prediction in predictions]
+            return max(set(neighbour_labels), key=neighbour_labels.count)
+
+        if method == "weighted":
+            raise Exception("Weighted aggregate not yet implemented")
+
+
 def main(
     limit: int = 100,
 ):
     """
     GroundedSAM to crop then DINO + QDrant to classify!
     """
+    qdrant_client = DrantClient('qdrant.db')
+
+    hf_embedder = HFEmbedder(
+        model_name = 'facebook/dino-vits16',
+        preprocessor_name = 'facebook/dino-vits16'
+    )
+
+    vector_db_classifier(
+        embedder=hf_embedder,
+        client=qdrant_client,
+        name='vision_chain_classifier',
+    )
 
     fast_base = UltralyticsDetector(
-        model_family='YOLO',
-        model_weights='yolov8n.pt',
+        model_family="YOLO",
+        model_weights="yolov8n.pt",
     )
     grounded_sam = GroundedSamDetector(
         ontology={
