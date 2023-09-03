@@ -1,5 +1,8 @@
-import vision_chain as vc
+import typer
 from qdrant_client import QdrantClient
+
+import vision_chain as vc
+
 
 def main(
     limit: int = 100,
@@ -9,21 +12,20 @@ def main(
     """
 
     hf_embedder = vc.HFEmbedder(
-        model_name = 'facebook/dino-vits16',
-        preprocessor_name = 'facebook/dino-vits16'
+        model_name="facebook/dino-vits16", preprocessor_name="facebook/dino-vits16"
     )
 
     classifier = vc.Classifier(
         embedder=hf_embedder,
-        client=QDrantClient('qdrant.db'),
-        name='vision_chain_classifier',
+        client=QDrantClient("qdrant.db"),
+        name="vision_chain_classifier",
     )
 
     fast_base = vc.UltralyticsDetector(
         model_family="YOLO",
         model_weights="yolov8n.pt",
     )
-    
+
     grounded_sam = vc.GroundedSamDetector(
         ontology={
             "plastic bottle": "bottle",
@@ -53,11 +55,13 @@ def main(
     if limit:
         file_paths = file_paths[:limit]
 
-    model = vc.ModelChain([
-        vc.FastBase(model=fast_base, name="fast_base"),
-        vc.AccurateFallback(model=grounded_sam, name="grounded_sam"),
-        vc.Classifier(model=classifier, name='qdrant_classifier'),
-    ])
+    model = vc.ModelChain(
+        [
+            vc.FastBase(model=fast_base, name="fast_base"),
+            vc.AccurateFallback(model=grounded_sam, name="grounded_sam"),
+            # vc.Classifier(model=classifier, name='qdrant_classifier'),
+        ]
+    )
 
     dataset = fo.Dataset.from_images(file_paths)
     dataset = get_predictions(dataset, model)

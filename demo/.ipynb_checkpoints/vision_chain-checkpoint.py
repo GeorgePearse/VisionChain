@@ -1,24 +1,24 @@
-from autodistill_grounded_sam import GroundedSAM
-from super_gradients.training import models
-from super_gradients.common.object_names import Models
-from autodistill.detection import CaptionOntology
-from autodistill_yolov8 import YOLOv8
-
-import super_gradients
-import typer
-from tqdm import tqdm
 import os
-from PIL import Image
-import fiftyone as fo
-from typing import List
-from dataclasses import dataclass, field
-from ultralytics import YOLO, RTDETR, NAS
-import supervision as sv
-from typing import Tuple, Dict, List
-from get_predictions import get_predictions
-from rich import print
 import time
+from dataclasses import dataclass, field
+from typing import Dict, List, Tuple
+
+import fiftyone as fo
 import pandas as pd
+import super_gradients
+import supervision as sv
+import typer
+from autodistill.detection import CaptionOntology
+from autodistill_grounded_sam import GroundedSAM
+from autodistill_yolov8 import YOLOv8
+from PIL import Image
+from rich import print
+from super_gradients.common.object_names import Models
+from super_gradients.training import models
+from tqdm import tqdm
+from ultralytics import NAS, RTDETR, YOLO
+
+from get_predictions import get_predictions
 
 
 @dataclass
