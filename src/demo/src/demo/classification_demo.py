@@ -24,8 +24,7 @@ def main(
         limit: int = 1000,
     ):
 
-    datasets = foz.list_zoo_datasets()
-    import pdb; pdb.set_trace()
+    foz.download_zoo_dataset('open-images-v7')
 
     if os.path.exists('qdrant'):
         shutil.rmtree('qdrant')
@@ -87,9 +86,9 @@ def main(
         
     for file_path in test_dataset.values('filepath'):
         prediction = classifier.predict(file_path)
-        print (file_path)
+        print(file_path)
+        print(prediction)
     
-
 
 if __name__ == '__main__':
     typer.run(main)
