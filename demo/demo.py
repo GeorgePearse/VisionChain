@@ -27,19 +27,14 @@ def main(
         dataset_type=fo.types.ImageClassificationDirectoryTree,
     )
 
-    classifier = vc.NNClassifier(
+    nn_classifier = vc.NNClassifier(
         embedder=hf_embedder,
         client=QdrantClient(path="qdrant.db"),
         collection_name="vision_chain_classifier",
         name='nn_classifier',
+        class_list=['husky', 'labrador']
     )
-
-    conditional_classifier = vc.ConditionalNNClassifier(
-        model = classifier,
-        condition = lambda pred: 'dog' in pred.label,
-    )
-
-    classifier.train(train_dataset)
+    nn_classifier.train(train_dataset)
 
     fast_base = vc.UltralyticsDetector(
         model_family="YOLO",
@@ -78,9 +73,12 @@ def main(
 
     model = vc.ModelChain(
         [
-            vc.FastBase(model=fast_base, confidence_trigger=0),
+            vc.FastBase(model=fast_base, confidence_trigger=0.5),
             vc.AccurateFallback(model=grounded_sam),
-            # vc.Classifier(model=classifier, name='qdrant_classifier'),
+            vc.ConditionalNNClassifier(
+                model = nn_classifier,
+                condition = lambda pred: ('dog' in pred.label) or ('cat' in pred.label),
+            )
         ],
         log_level="verbose",
     )
