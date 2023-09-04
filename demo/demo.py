@@ -1,7 +1,10 @@
+import os
+
 import typer
 from qdrant_client import QdrantClient
-
+import fiftyone as fo
 import vision_chain as vc
+from get_predictions import get_predictions
 
 
 def main(
@@ -12,14 +15,14 @@ def main(
     """
 
     hf_embedder = vc.HFEmbedder(
-        model_name="facebook/dino-vits16", 
+        model_name="facebook/dino-vits16",
         preprocessor_name="facebook/dino-vits16",
-        device='cuda',
+        device="cuda",
     )
 
     classifier = vc.Classifier(
         embedder=hf_embedder,
-        client=QdrantClient("qdrant.db"),
+        client=QdrantClient(path="qdrant.db"),
         collection_name="vision_chain_classifier",
     )
 
@@ -62,7 +65,8 @@ def main(
             vc.FastBase(model=fast_base, name="fast_base"),
             vc.AccurateFallback(model=grounded_sam, name="grounded_sam"),
             # vc.Classifier(model=classifier, name='qdrant_classifier'),
-        ]
+        ],
+        log_level="verbose",
     )
 
     dataset = fo.Dataset.from_images(file_paths)

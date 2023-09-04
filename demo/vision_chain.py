@@ -1,7 +1,7 @@
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import fiftyone as fo
 import pandas as pd
@@ -16,8 +16,9 @@ from PIL import Image
 from qdrant_client import QdrantClient, models
 from rich import print
 from tqdm import tqdm
-from ultralytics import NAS, RTDETR, YOLO
 from transformers import ViTImageProcessor, ViTModel
+from ultralytics import NAS, RTDETR, YOLO
+
 from get_predictions import get_predictions
 
 
@@ -139,16 +140,16 @@ class SpeculativePrediction:
 
     chain_start: bool = False
 
-    confident_detections: Predictions = None
+    confident_detections: Optional[Predictions] = None
 
     # hit if there's a downstream classifier
-    reclassify_detections: Predictions = None
+    reclassify_detections: Optional[Predictions] = None
 
     # hit if there's a downstream Detector
     repredict_whole_frame: bool = False
 
     # just whether the last model ran or not
-    triggered: bool = None
+    triggered: Optional[bool] = None
 
 
 @dataclass
@@ -244,6 +245,8 @@ class ConditionalModel:
         pass
 
     def speculate(
+        self,
+        file_path: str,
         speculative_prediction: SpeculativePrediction,
     ) -> SpeculativePrediction:
         """
@@ -360,7 +363,7 @@ class Embedder:
 class HFEmbedder(Embedder):
     preprocessor_name: str
     model_name: str
-    device: str 
+    device: str
 
     def __post_init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
