@@ -98,12 +98,21 @@ class Predictions:
 
     @staticmethod
     def from_dataframe(df: pd.DataFrame):
-        return Predictions(
-            labels=df["labels"].tolist(),
-            boxes=df["boxes"].tolist(),
-            scores=df["scores"].tolist(),
-            class_list=df["class_list"].tolist()[0],
-        )
+        if len(df) == 0: 
+            return Predictions(
+                labels=[],
+                boxes=[[]],
+                scores=[],
+                class_list=[]
+            )
+
+        else:
+            return Predictions(
+                labels=df["labels"].tolist(),
+                boxes=df["boxes"].tolist(),
+                scores=df["scores"].tolist(),
+                class_list=df["class_list"].tolist()[0],
+            )
 
 
 @dataclass
@@ -117,9 +126,6 @@ class Model:
     """
     Just a thing which predicts
     """
-
-    # class_list: List[str]
-
     def predict(self, file_path: str) -> sv.Detections:
         pass
 
@@ -160,6 +166,7 @@ class UltralyticsDetector(Model):
 
     model_family: str
     model_weights: str
+    name: str
 
     def __post_init__(self):
         model_family_from_string = {
@@ -180,23 +187,25 @@ class UltralyticsDetector(Model):
         ]
         nas_models = ["yolo_nas_s.pt", "yolo_nas_m.pt", "yolo_nas_l.pt"]
 
-        assert (
-            self.model_weights not in nas_models
-        ), "NAS model weights havent worked when tested"
+        assert self.model_weights not in nas_models, (
+            "NAS model weights havent worked when tested"
+        )
 
         supported_models = yolo_models + rtdetr_models + nas_models
-
-        assert (
-            self.model_weights in supported_models
-        ), f"Requested model {self.model_weights} not supported"
+       
+        assert self.model_weights in supported_models, (
+            f"Requested model {self.model_weights} not supported"
+        )
         self.model = model_family_from_string[self.model_family](self.model_weights)
 
     def predict(self, file_paths: List[str]) -> Predictions:
         predictions = self.model(file_paths, stream=False)
         detections = sv.Detections.from_ultralytics(predictions[0])
+        class_list = list(predictions[0].names.values())
+        class_list = [f'{self.name}: {class_name}' for class_name in class_list]
         predictions = Predictions.from_supervision(
             detections,
-            list(predictions[0].names.values()),
+            class_list,
         )
         return predictions
 
@@ -218,7 +227,7 @@ class UncertaintyRejection(Condition):
 
     def evaluate(self, predictions: Predictions) -> bool:
         predictions_df = predictions.to_dataframe()
-        condition = predictions_df.scores > self.confidence_trigger
+        condition = predictions_df.scores < self.confidence_trigger
         filtered_df = predictions_df[condition]
         filtered_predictions = Predictions.from_dataframe(filtered_df)
 
@@ -231,7 +240,6 @@ class UncertaintyRejection(Condition):
 @dataclass
 class ConditionalModel:
     model: Model
-    name: str
     condition_triggered: bool = field(default=False, init=False)
 
     def match(
@@ -282,15 +290,16 @@ class ModelChain(Model):
             elapsed = end - start
             if self.log_level == "verbose":
                 print(
-                    f"Preds with {conditional_model.name} took {elapsed}. Condition triggered: {conditional_model.condition_triggered}"
+                    f"Preds with {conditional_model.model.name} took {elapsed}. Condition triggered: {conditional_model.condition_triggered}"
                 )
 
         return speculative_predictions.confident_detections
 
 
 @dataclass
-class GroundedSamDetector:
+class GroundedSamDetector(Model):
     ontology: Dict[str, str]
+    name: str
 
     def __post_init__(self):
         self.model = GroundedSAM(ontology=CaptionOntology(self.ontology))
@@ -299,11 +308,14 @@ class GroundedSamDetector:
         detections = self.model.predict(file_path)
         # Quick patch fix
         detections = detections.with_nms(class_agnostic=True)
-        return Predictions.from_supervision(detections, list(self.ontology.values()))
+        class_list = [f'{self.name}: {class_name}' for class_name in list(self.ontology.values())]
+        return Predictions.from_supervision(detections, class_list)
 
 
 @dataclass
 class FastBase(ConditionalModel):
+    confidence_trigger: float
+
     def match(self, speculative_prediction: SpeculativePrediction) -> bool:
         self.condition_triggered = True
 
@@ -319,7 +331,7 @@ class FastBase(ConditionalModel):
         self.match(detections)
 
         repredict_whole_frame = UncertaintyRejection(
-            confidence_trigger=0.1,
+            confidence_trigger=self.confidence_trigger,
         ).evaluate(detections)
 
         return SpeculativePrediction(
