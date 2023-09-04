@@ -8,7 +8,7 @@ from get_predictions import get_predictions
 
 
 def main(
-    limit: int = 100,
+    limit: int = 10,
 ):
     """
     GroundedSAM to crop then DINO + QDrant to classify!
@@ -29,6 +29,7 @@ def main(
     fast_base = vc.UltralyticsDetector(
         model_family="YOLO",
         model_weights="yolov8n.pt",
+        name='yolov8',
     )
 
     grounded_sam = vc.GroundedSamDetector(
@@ -49,7 +50,8 @@ def main(
             "cow": "cow",
             "laptop": "laptop",
             "dog": "dog",
-        }
+        },
+        name='grounded_sam',
     )
 
     dir_path = "/home/ubuntu/VisionChain/data/bottles_dataset/data"
@@ -62,8 +64,8 @@ def main(
 
     model = vc.ModelChain(
         [
-            vc.FastBase(model=fast_base, name="fast_base"),
-            vc.AccurateFallback(model=grounded_sam, name="grounded_sam"),
+            vc.FastBase(model=fast_base, confidence_trigger=0),
+            vc.AccurateFallback(model=grounded_sam),
             # vc.Classifier(model=classifier, name='qdrant_classifier'),
         ],
         log_level="verbose",
