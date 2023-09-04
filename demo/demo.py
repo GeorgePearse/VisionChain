@@ -27,11 +27,16 @@ def main(
         dataset_type=fo.types.ImageClassificationDirectoryTree,
     )
 
-    classifier = vc.Classifier(
+    classifier = vc.NNClassifier(
         embedder=hf_embedder,
         client=QdrantClient(path="qdrant.db"),
         collection_name="vision_chain_classifier",
         name='nn_classifier',
+    )
+
+    conditional_classifier = vc.ConditionalNNClassifier(
+        model = classifier,
+        condition = lambda pred: 'dog' in pred.label,
     )
 
     classifier.train(train_dataset)
