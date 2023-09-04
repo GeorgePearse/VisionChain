@@ -148,9 +148,6 @@ class SpeculativePrediction:
 
     confident_detections: Optional[Predictions] = None
 
-    # hit if there's a downstream classifier
-    reclassify_detections: Optional[Predictions] = None
-
     # hit if there's a downstream Detector
     repredict_whole_frame: bool = False
 
@@ -269,7 +266,7 @@ class ModelChain(Model):
     conditional_models: List[ConditionalModel]
     log_level: str
 
-    def predict(self, file_path: str) -> sv.Detections:
+    def predict(self, file_path: str) -> Predictions:
         """
         Should the triggers be attached to the curr model,
         or the next model?
@@ -336,7 +333,6 @@ class FastBase(ConditionalModel):
 
         return SpeculativePrediction(
             confident_detections=detections,
-            reclassify_detections=None,  # empty detection
             repredict_whole_frame=repredict_whole_frame,
         )
 
@@ -358,7 +354,6 @@ class AccurateFallback(ConditionalModel):
 
             return SpeculativePrediction(
                 confident_detections=detections,
-                reclassify_detections=None,
                 repredict_whole_frame=False,
             )
         else:
@@ -382,8 +377,11 @@ class HFEmbedder(Embedder):
         self.processor = ViTImageProcessor.from_pretrained(self.preprocessor_name)
         self.model = ViTModel.from_pretrained(self.model_name).to(self.device)
 
-    def embed(self, file_path: str) -> List[float]:
-        image = Image.open(filepath)
+    def embed(self, file_path: str, image = None) -> List[float]:
+        # TODO, make this neater
+        if not image:
+            image = Image.open(file_path)
+
         inputs = processor(images=image, return_tensors="pt").to(self.device)
 
         with torch.no_grad():
@@ -415,8 +413,7 @@ class Classifier:
         """
         embeddings = []
         for filepath in tqdm(train_dataset.values("filepath")):
-            embedding = embedder.embed(filepath)
-            # print(len(embedding))
+            embedding = self.embedder.embed(filepath)
             embeddings.append(embedding)
 
         self.client.upsert(
@@ -433,8 +430,8 @@ class Classifier:
                 for idx, (vector, file_path, label) in enumerate(
                     zip(
                         embeddings,
-                        object_dataset.values("filepath"),
-                        object_dataset.values("ground_truth"),
+                        train_dataset.values("filepath"),
+                        train_dataset.values("ground_truth"),
                     )
                 )
             ],
@@ -476,10 +473,19 @@ class NNClassifier(ConditionalModel):
     model: Classifier
 
     def match(self, speculative_prediction: SpeculativePrediction) -> bool:
-        if len(speculative_predictions.reclassify_detections) != 0:
-            self.condition_triggered = True
+        for label in speculative_prediction.confident_predictions:
+            if 'dog' in  label: 
+                self.condiition_triggered = True
+        #if len(speculative_predictions.reclassify_detections) != 0:
+    #    self.condition_triggered = True
 
-    def speculate(self, speculative_prediction: SpeculativePrediction) -> SpeculativePrediction:
-        for detection in speculative_prediction.reclassify_detections:
-            detection = self.model.predict()
+    def speculate(self, file_path: str, speculative_prediction: SpeculativePrediction) -> SpeculativePrediction:
+        output_labels = []
+        output_classes = []
+        output_scores = []
+        for labels, boxes, scores in zip(
+                speculative_prediction.reclassify_detections:
+            image = Image.open(file_path)
+            cropped_image = image.crop(predictions.boxes)
+            detection = self.model.predict('', image=cropped_image)
 
