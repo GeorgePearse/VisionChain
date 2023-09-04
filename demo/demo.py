@@ -2,8 +2,9 @@ import os
 
 import typer
 from qdrant_client import QdrantClient
-
+import fiftyone as fo
 import vision_chain as vc
+from get_predictions import get_predictions
 
 
 def main(

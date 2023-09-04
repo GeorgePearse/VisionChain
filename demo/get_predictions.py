@@ -8,12 +8,12 @@ from icecream import ic
 from PIL import Image
 from torchvision import transforms
 from vision.tools.predictions import EmptyPredictions, Predictions
-
+import vision_chain as vc
 
 def get_predictions(
-    model,
     dataset: fo.Dataset,
-    output_key="predictions",
+    model: vc.Model,
+    output_key: str = "predictions",
 ):
     """
     Run inference over a Voxel51
