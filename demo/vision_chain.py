@@ -1,7 +1,7 @@
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Callable
 
 import fiftyone as fo
 import pandas as pd
@@ -18,8 +18,13 @@ from rich import print
 from tqdm import tqdm
 from transformers import ViTImageProcessor, ViTModel
 from ultralytics import NAS, RTDETR, YOLO
-
 from get_predictions import get_predictions
+
+@dataclass
+class Prediction:
+    score: float
+    box: List[float]
+    label: str
 
 
 @dataclass
@@ -290,7 +295,7 @@ class ModelChain(Model):
                     f"Preds with {conditional_model.model.name} took {elapsed}. Condition triggered: {conditional_model.condition_triggered}"
                 )
 
-        return speculative_predictions.confident_detections
+        return speculative_predictions.detections
 
 
 @dataclass
@@ -301,7 +306,7 @@ class GroundedSamDetector(Model):
     def __post_init__(self):
         self.model = GroundedSAM(ontology=CaptionOntology(self.ontology))
 
-    def predict(self, file_path: str) -> sv.Detections:
+    def predict(self, file_path: str) -> Predictions:
         detections = self.model.predict(file_path)
         # Quick patch fix
         detections = detections.with_nms(class_agnostic=True)
@@ -332,7 +337,7 @@ class FastBase(ConditionalModel):
         ).evaluate(detections)
 
         return SpeculativePrediction(
-            confident_detections=detections,
+            detections=detections,
             repredict_whole_frame=repredict_whole_frame,
         )
 
@@ -382,16 +387,16 @@ class HFEmbedder(Embedder):
         if not image:
             image = Image.open(file_path)
 
-        inputs = processor(images=image, return_tensors="pt").to(self.device)
+        inputs = self.processor(images=image, return_tensors="pt").to(self.device)
 
         with torch.no_grad():
-            embeddings = model(**inputs).last_hidden_state[0][0]
+            embeddings = self.model(**inputs).last_hidden_state[0][0]
 
         return embeddings
 
 
 @dataclass
-class Classifier:
+class NNClassifier:
     collection_name: str
     client: QdrantClient
     embedder: Embedder
@@ -417,7 +422,7 @@ class Classifier:
             embeddings.append(embedding)
 
         self.client.upsert(
-            collection_name=collection_name,
+            collection_name=self.collection_name,
             points=[
                 models.PointStruct(
                     id=idx,
@@ -469,23 +474,53 @@ class Classifier:
 
 
 @dataclass
-class NNClassifier(ConditionalModel):
-    model: Classifier
+class ConditionalNNClassifier(ConditionalModel):
+    model: NNClassifier
+    condition: Callable
 
     def match(self, speculative_prediction: SpeculativePrediction) -> bool:
-        for label in speculative_prediction.confident_predictions:
-            if 'dog' in  label: 
-                self.condiition_triggered = True
-        #if len(speculative_predictions.reclassify_detections) != 0:
-    #    self.condition_triggered = True
+        """
+        Biggest weakness is prediction level conditions
+        """
+        pass
 
     def speculate(self, file_path: str, speculative_prediction: SpeculativePrediction) -> SpeculativePrediction:
+
+        # does not edit the boxes
         output_labels = []
-        output_classes = []
         output_scores = []
-        for labels, boxes, scores in zip(
-                speculative_prediction.reclassify_detections:
-            image = Image.open(file_path)
-            cropped_image = image.crop(predictions.boxes)
-            detection = self.model.predict('', image=cropped_image)
+
+        for label, box, score in zip(
+            speculative_prediction.detections.labels,
+            speculative_prediction.detections.boxes,
+            speculative_prediction.detections.scores,
+        ):
+            # simplifies use of lambda for condition
+            prediction = Prediction(
+                label=label,
+                box=box,
+                score=score,
+            )
+
+            if self.condition(prediction): 
+                speculative_prediction.condition_triggered = True
+                image = Image.open(file_path)
+                cropped_image = image.crop(predictions.box)
+                classification_detection = self.model.predict('', image=cropped_image)
+                output_labels.append(classification_detection.name)
+                output_scores.append(classification_detection.score)
+                output_boxes.append(box)
+            else: 
+                output_labels.append(label)
+                output_scores.append(score)
+                output_boxes.append(box)
+
+        speculative_prediction.detections = Predictions(
+            labels=output_labels,
+            scores=output_scores,
+            boxes=output_boxes,
+        )
+        return speculative_prediction
+
+            
 
