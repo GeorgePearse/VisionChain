@@ -472,7 +472,7 @@ class Classifier:
 
 
 @dataclass
-class NNClassifier((ConditionalModel):
+class NNClassifier(ConditionalModel):
     model: Classifier
 
     def match(self, speculative_prediction: SpeculativePrediction) -> bool:
