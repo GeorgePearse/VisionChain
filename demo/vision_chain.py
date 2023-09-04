@@ -397,6 +397,7 @@ class Classifier:
     collection_name: str
     client: QdrantClient
     embedder: Embedder
+    name: str
 
     def __post_init__(self):
         self.client.recreate_collection(
@@ -468,3 +469,17 @@ class Classifier:
 
         if method == "weighted":
             raise Exception("Weighted aggregate not yet implemented")
+
+
+@dataclass
+class NNClassifier((ConditionalModel):
+    model: Classifier
+
+    def match(self, speculative_prediction: SpeculativePrediction) -> bool:
+        if len(speculative_predictions.reclassify_detections) != 0:
+            self.condition_triggered = True
+
+    def speculate(self, speculative_prediction: SpeculativePrediction) -> SpeculativePrediction:
+        for detection in speculative_prediction.reclassify_detections:
+            detection = self.model.predict()
+
