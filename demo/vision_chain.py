@@ -151,7 +151,7 @@ class SpeculativePrediction:
 
     chain_start: bool = False
 
-    confident_detections: Optional[Predictions] = None
+    detections: Optional[Predictions] = None
 
     # hit if there's a downstream Detector
     repredict_whole_frame: bool = False
@@ -358,7 +358,7 @@ class AccurateFallback(ConditionalModel):
             detections = self.model.predict(file_path)
 
             return SpeculativePrediction(
-                confident_detections=detections,
+                detections=detections,
                 repredict_whole_frame=False,
             )
         else:
@@ -382,15 +382,17 @@ class HFEmbedder(Embedder):
         self.processor = ViTImageProcessor.from_pretrained(self.preprocessor_name)
         self.model = ViTModel.from_pretrained(self.model_name).to(self.device)
 
-    def embed(self, file_path: str, image = None) -> List[float]:
+    def embed(self, file_path: str = None, image = None) -> List[float]:
         # TODO, make this neater
-        if not image:
+        if image is None:
             image = Image.open(file_path)
 
         inputs = self.processor(images=image, return_tensors="pt").to(self.device)
 
         with torch.no_grad():
-            embeddings = self.model(**inputs).last_hidden_state[0][0]
+            embeddings = self.model(**inputs).last_hidden_state[0][0].tolist()
+            #embeddings = self.model(**inputs) 
+            #print('successful embedding generation')
 
         return embeddings
 
@@ -401,6 +403,9 @@ class NNClassifier:
     client: QdrantClient
     embedder: Embedder
     name: str
+
+    # shouldn't need to define this upfront
+    class_list: List[str]
 
     def __post_init__(self):
         self.client.recreate_collection(
@@ -417,8 +422,8 @@ class NNClassifier:
         into this.
         """
         embeddings = []
-        for filepath in tqdm(train_dataset.values("filepath")):
-            embedding = self.embedder.embed(filepath)
+        for file_path in tqdm(train_dataset.values("filepath")):
+            embedding = self.embedder.embed(file_path=file_path)
             embeddings.append(embedding)
 
         self.client.upsert(
@@ -443,11 +448,11 @@ class NNClassifier:
         )
 
     def predict(
-        self, query_image_path: str, num_nearest_neighbours: int = 5
+        self, query_image_path: str, image = None,  num_nearest_neighbours: int = 5
     ) -> ClassificationPrediction:
         hits = self.client.search(
-            collection_name=collection_name,
-            query_vector=get_embeddings(query_image_path).tolist()[0][0],
+            collection_name=self.collection_name,
+            query_vector=self.embedder.embed(image=image),
             limit=num_nearest_neighbours,
         )
 
@@ -464,7 +469,7 @@ class NNClassifier:
     @staticmethod
     def aggregate(
         predictions: List[ClassificationPrediction], method="majority"
-    ) -> ClassificationPrediction:
+    ) -> str:
         if method == "majority":
             neighbour_labels = [prediction.name for prediction in predictions]
             return max(set(neighbour_labels), key=neighbour_labels.count)
@@ -489,7 +494,9 @@ class ConditionalNNClassifier(ConditionalModel):
         # does not edit the boxes
         output_labels = []
         output_scores = []
+        output_boxes = []
 
+        # prioristise fixing this, should be easy
         for label, box, score in zip(
             speculative_prediction.detections.labels,
             speculative_prediction.detections.boxes,
@@ -505,10 +512,12 @@ class ConditionalNNClassifier(ConditionalModel):
             if self.condition(prediction): 
                 speculative_prediction.condition_triggered = True
                 image = Image.open(file_path)
-                cropped_image = image.crop(predictions.box)
-                classification_detection = self.model.predict('', image=cropped_image)
-                output_labels.append(classification_detection.name)
-                output_scores.append(classification_detection.score)
+                cropped_image = image.crop(prediction.box)
+                cropped_image.save('crop.jpeg')
+                print('successfully cropped image')
+                new_label = self.model.predict('', image=cropped_image)
+                output_labels.append(f'{self.model.name}: {new_label}')
+                output_scores.append(0.5)
                 output_boxes.append(box)
             else: 
                 output_labels.append(label)
@@ -519,6 +528,7 @@ class ConditionalNNClassifier(ConditionalModel):
             labels=output_labels,
             scores=output_scores,
             boxes=output_boxes,
+            class_list=self.model.class_list,
         )
         return speculative_prediction
 
