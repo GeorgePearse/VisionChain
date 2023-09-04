@@ -9,6 +9,8 @@ from get_predictions import get_predictions
 
 def main(
     limit: int = 10,
+    training_set_path = '../data/nn_training_data/',
+    test_dataset = '../data/test_dataset/data',
 ):
     """
     GroundedSAM to crop then DINO + QDrant to classify!
@@ -20,11 +22,19 @@ def main(
         device="cuda",
     )
 
+    train_dataset = fo.Dataset.from_dir(
+        dataset_dir=training_set_path,
+        dataset_type=fo.types.ImageClassificationDirectoryTree,
+    )
+
     classifier = vc.Classifier(
         embedder=hf_embedder,
         client=QdrantClient(path="qdrant.db"),
         collection_name="vision_chain_classifier",
+        name='nn_classifier',
     )
+
+    classifier.train(train_dataset)
 
     fast_base = vc.UltralyticsDetector(
         model_family="YOLO",
@@ -54,9 +64,8 @@ def main(
         name='grounded_sam',
     )
 
-    dir_path = "/home/ubuntu/VisionChain/data/bottles_dataset/data"
     file_paths = [
-        os.path.join(dir_path, file_name) for file_name in os.listdir(dir_path)
+        os.path.join(test_dataset, file_name) for file_name in os.listdir(test_dataset)
     ]
 
     if limit:
