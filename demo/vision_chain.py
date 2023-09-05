@@ -1,7 +1,8 @@
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Callable
+from typing import Dict, List, Optional, Tuple, Callable, Union
+from abc import ABC, abstractmethod
 
 import fiftyone as fo
 import pandas as pd
@@ -131,26 +132,40 @@ class Predictions:
             Prediction(
                 label=self.labels[idx],
                 box=self.boxes[idx],
-                scores=self.scores[idx],
+                score=self.scores[idx],
             )
             for idx, _ in enumerate(self.labels)
         ]
 
+    def from_supervision(detections: sv.Detections, class_list: List[str]):
+        labels = [class_list[x] for x in detections.class_id.tolist()]
+        return Predictions(
+            boxes=detections.xyxy.tolist(),
+            labels=labels,
+            scores=detections.confidence.tolist(),
+        )
+    
 
+empty_predictions = Predictions(
+    scores = [],
+    boxes = [[]],
+    labels = [],
+)
 
 @dataclass
 class ClassificationPrediction:
-    name: str
+    label: str
     score: float
 
 
-@dataclass
-class Model:
+class Model(ABC):
     """
     Just a thing which predicts
     """
-    def predict(self, file_path: str) -> sv.Detections:
-        pass
+
+    @abstractmethod
+    def predict(self, file_path: str) -> Predictions:
+        raise Exception("Prediction method not implemented")
 
 
 @dataclass
@@ -205,65 +220,114 @@ class UltralyticsDetector(Model):
         return predictions
 
 
-@dataclass
-class Condition:
-    def evaluate(detections: sv.Detections) -> bool:
-        raise Exception(
-            """"
-            Need to implement the method to 
-            evaluate the specified condition.
-        """
-        )
+
+def confidence_trigger(
+        predictions: Predictions,
+        confidence_trigger: float,
+    ) -> bool: 
+    predictions_df = predictions.to_dataframe()
+    condition = predictions_df.scores < confidence_trigger
+    filtered_df = predictions_df[condition]
+    filtered_predictions = Predictions.from_dataframe(filtered_df)
+
+    if len(filtered_predictions) == 0:
+        return False
+    else:
+        return True
 
 
 @dataclass
-class UncertaintyRejection(Condition):
-    confidence_trigger: float = 1
-
-    def evaluate(self, predictions: Predictions) -> bool:
-        predictions_df = predictions.to_dataframe()
-        condition = predictions_df.scores < self.confidence_trigger
-        filtered_df = predictions_df[condition]
-        filtered_predictions = Predictions.from_dataframe(filtered_df)
-
-        if len(filtered_predictions) == 0:
-            return False
-        else:
-            return True
-
-
-@dataclass
-class ConditionalModel:
+class ConditionalDetector:
+    # should be detector not Model
     model: Model
-    condition_triggered: bool = field(default=False, init=False)
 
-    def match(
-        self, speculative_prediction: SpeculativePrediction
-    ) -> SpeculativePrediction:
-        """
-        When the model should be called.
-        In terms of attributes of the speculative
-        prediction.
-        """
-        pass
+    # If you created these as instances 
+    # you could just check the instance type
+    # and act as appropriate
+    frame_level_condition: Callable = None
+    prediction_level_condition: Callable = None
 
-    def speculate(
+    def predict(
         self,
         file_path: str,
-        speculative_prediction: SpeculativePrediction,
-    ) -> SpeculativePrediction:
+        predictions: Predictions,
+        iteration: int,
+    ) -> Predictions:
         """
         Run inference and flag anything that should be reconsidered
         by other models
         """
-        pass
+        if iteration == 0: 
+            return self.model.predict(file_path)
+
+        if (self.prediction_level_condition is None) and (self.frame_level_condition is None):
+            return self.model.predict(file_path)
+
+        if self.prediction_level_condition is not None:
+            for prediction in predictions.to_list_of_preds():
+                
+                if self.prediction_level_condition(prediction):
+                    return self.model.predict(file_path)
+
+        if self.frame_level_condition is not None: 
+            if self.frame_level_condition(predictions):
+                return self.model.predict(file_path)
+
+        return predictions
 
 
 @dataclass
+class ConditionalClassifier:
+    """
+    This could at least now take multiply underlying 
+    NN classifiers and work together.
+    """
+    # Should be classifier not Model
+    model: Model
+
+    # This is a prediction level 
+    # Condition
+    prediction_level_condition: Callable
+
+    def predict(
+            self, 
+            file_path: str, 
+            predictions: Predictions, 
+            iteration: int
+        ) -> Predictions:
+
+        if iteration == 0: 
+            raise NotImplementedError("""
+                Starting the chain with a classifier 
+                is not yet supported
+            """)
+
+
+        output_preds = []
+        list_of_preds = predictions.to_list_of_preds()
+
+        for prediction in list_of_preds:
+            if self.prediction_level_condition(prediction): 
+                image = Image.open(file_path)
+                cropped_image = image.crop(prediction.box)
+                classification_prediction = self.model.predict('', image=cropped_image)
+
+                # TODO: give Prediction or ClassificationPrediction a method to 
+                # tidy this up
+                prediction.label = f'{self.model.name}: {classification_prediction.label}'
+                prediction.score = classification_prediction.score
+             
+            # either the label is editted or it's the 
+            # original prediction
+            output_preds.append(prediction)
+
+        return Predictions.from_list_of_preds(output_preds)
+            
+
+@dataclass
 class ModelChain(Model):
-    conditional_models: List[ConditionalModel]
+    conditional_models: List[Union[ConditionalDetector, ConditionalClassifier]]
     log_level: str
-    all_predictions: Dict[str, Predictions]
 
     def predict(self, file_path: str) -> Predictions:
         """
@@ -272,21 +336,21 @@ class ModelChain(Model):
 
         Which creates the cleaner API
         """
-        predictions = EmptyPredictions()
+        predictions = empty_predictions
 
-        for conditional_model in self.conditional_models:
+        for iteration, conditional_model in enumerate(self.conditional_models):
             start = time.time()
-            predictions, model_predictions = conditional_model.speculate(
+            predictions = conditional_model.predict(
                 file_path,
                 predictions,
+                iteration,
             )
-            all_predicitons[conditional_model.model.name] = model_predictions
             end = time.time()
             elapsed = end - start
             if self.log_level == "verbose":
                 # TODO: This should use the name of the 'conditional model', not the underlying model
                 print(
-                    f"Preds with {conditional_model.model.name} took {elapsed}. Condition triggered: {conditional_model.condition_triggered}"
+                    f"Preds with {conditional_model.model.name} took {elapsed}"
                 )
 
         return predictions 
@@ -308,58 +372,11 @@ class GroundedSamDetector(Model):
         return Predictions.from_supervision(detections, class_list)
 
 
-@dataclass
-class FastBase(ConditionalModel):
-    confidence_trigger: float
-
-    def match(self, speculative_prediction: SpeculativePrediction) -> bool:
-        self.condition_triggered = True
-
-    def speculate(
-        self, file_path: str, speculative_prediction: SpeculativePrediction
-    ) -> SpeculativePrediction:
-        """
-        Run inference, return speculative prediction
-        """
-        detections = self.model.predict(file_path)
-
-        # bit of a fake / meaningless line
-        self.match(detections)
-
-        repredict_whole_frame = UncertaintyRejection(
-            confidence_trigger=self.confidence_trigger,
-        ).evaluate(detections)
-
-        return  
-
-
-@dataclass
-class AccurateFallback(ConditionalModel):
-    def match(self, speculative_prediction: SpeculativePrediction) -> bool:
-        if speculative_prediction.repredict_whole_frame:
-            self.condition_triggered = True
-
-    def speculate(
-        self, file_path: str, speculative_prediction: SpeculativePrediction
-    ) -> SpeculativePrediction:
-        """ """
-        self.match(speculative_prediction)
-
-        if self.condition_triggered:
-            detections = self.model.predict(file_path)
-
-            return SpeculativePrediction(
-                detections=detections,
-                repredict_whole_frame=False,
-            )
-        else:
-            return speculative_prediction
-
-
+# TODO: Should probably use ABC and abstractmethod
 @dataclass
 class Embedder:
     def embed(self, file_path: str):
-        pass
+        raise NotImplementedError('Need to implement embed()')
 
 
 @dataclass
@@ -448,7 +465,7 @@ class NNClassifier:
         predictions = []
         for hit in hits:
             prediction = ClassificationPrediction(
-                name=hit.payload["label"]["label"],
+                label=hit.payload["label"]["label"],
                 score=hit.score,
             )
             predictions.append(prediction)
@@ -458,41 +475,16 @@ class NNClassifier:
     @staticmethod
     def aggregate(
         predictions: List[ClassificationPrediction], method="majority"
-    ) -> str:
+    ) -> ClassificationPrediction:
         if method == "majority":
-            neighbour_labels = [prediction.name for prediction in predictions]
-            return max(set(neighbour_labels), key=neighbour_labels.count)
+            neighbour_labels = [prediction.label for prediction in predictions]
+            label =  max(set(neighbour_labels), key=neighbour_labels.count)
+            score = len([x for x in neighbour_labels if x == label]) / len(neighbour_labels)
+            return ClassificationPrediction(
+                label=label,
+                score=score,
+            )
 
         if method == "weighted":
-            raise Exception("Weighted aggregate not yet implemented")
-
-
-@dataclass
-class ConditionalNNClassifier(ConditionalModel):
-    model: NNClassifier
-    condition: Callable
-
-    def speculate(self, file_path: str, speculative_prediction: Predictions) -> Predicitions:
-
-        output_preds = []
-        list_of_preds = speculative_predictions.to_list_of_preds()
-
-        for prediction in list_of_preds:
-            if self.condition(prediction): 
-                speculative_prediction.condition_triggered = True
-                image = Image.open(file_path)
-                cropped_image = image.crop(prediction.box)
-                new_label = self.model.predict('', image=cropped_image)
-                prediction.label = f'{self.model.name}: {new_label}'
-                
-            output_preds.append(prediction)
-
-        speculative_prediction.detections = Predictions(
-            labels=output_labels,
-            scores=output_scores,
-            boxes=output_boxes,
-        )
-        return speculative_prediction
-
-            
+            raise NotImplementedError("Weighted aggregate not yet implemented")
 
