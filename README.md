@@ -5,3 +5,8 @@ Could add a hyperparameter optimizer for things like setting the confidence at w
 
 Constraining artificial stupidity and giving AI some hand rails.
 
+To Do: 
+- [ ] Create some templates, e.g. cascade model
+- [ ] Support VQA models on crops or similar
+- [ ] Support NN Classifiers based on the embeddings of multiple models.
+- [ ] Support Segmentation models
