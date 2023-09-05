@@ -119,6 +119,25 @@ class Predictions:
                 class_list=df["class_list"].tolist()[0],
             )
 
+    @staticmethod
+    def from_list_of_preds(predictions: List[Prediction]):
+        return Predictions(
+            labels=[pred.label for pred in predictions],
+            boxes=[pred.box for pred in predictions],
+            scores=[pred.score for pred in predictions],
+        )
+
+    def to_list_of_preds(self) -> List[Prediction]:
+        return [
+            Prediction(
+                label=self.labels[idx],
+                box=self.boxes[idx],
+                scores=self.scores[idx],
+            )
+            for idx, _ in enumerate(self.labels)
+        ]
+
+
 
 @dataclass
 class ClassificationPrediction:
@@ -513,8 +532,6 @@ class ConditionalNNClassifier(ConditionalModel):
                 speculative_prediction.condition_triggered = True
                 image = Image.open(file_path)
                 cropped_image = image.crop(prediction.box)
-                cropped_image.save('crop.jpeg')
-                print('successfully cropped image')
                 new_label = self.model.predict('', image=cropped_image)
                 output_labels.append(f'{self.model.name}: {new_label}')
                 output_scores.append(0.5)

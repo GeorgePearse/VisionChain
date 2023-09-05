@@ -48,8 +48,8 @@ def main(
             "glass bottle": "bottle",
             "wine bottle": "bottle",
             "person": "person",
-            "grapes": "fruit",
-            "banana": "fruit",
+            "grapes": "grapes",
+            "banana": "grapes",
             "bird": "bird",
             "glove": "glove",
             "basket": "basket",
@@ -70,6 +70,7 @@ def main(
 
     if limit:
         file_paths = file_paths[:limit]
+    # file_paths = file_paths + ['/home/ubuntu/VisionChain/demo/labrador_again.jpeg']
 
     model = vc.ModelChain(
         [
