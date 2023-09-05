@@ -220,22 +220,6 @@ class UltralyticsDetector(Model):
         return predictions
 
 
-
-def confidence_trigger(
-        predictions: Predictions,
-        confidence_trigger: float,
-    ) -> bool: 
-    predictions_df = predictions.to_dataframe()
-    condition = predictions_df.scores < confidence_trigger
-    filtered_df = predictions_df[condition]
-    filtered_predictions = Predictions.from_dataframe(filtered_df)
-
-    if len(filtered_predictions) == 0:
-        return False
-    else:
-        return True
-
-
 @dataclass
 class ConditionalDetector:
     # should be detector not Model
