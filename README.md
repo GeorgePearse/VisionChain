@@ -1,7 +1,7 @@
 # VisionChain
 Framework to support common preprocessing and postprocessing steps, along with computer vision heuristics built with opencv, and voting systems ontop of those heuristic-model combos. 
 
-https://hitla-ml.github.io/
+Could add a hyperparameter optimizer for things like setting the confidence at which to intervene.
 
-Constraining stupidity and giving AI some hand rails.
+Constraining artificial stupidity and giving AI some hand rails.
 
