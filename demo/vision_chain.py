@@ -41,7 +41,6 @@ class Predictions:
     scores: List[float]
     boxes: List[List[float]]
     labels: List[str]
-    class_list: List[str]
 
     def __post_init__(self):
         """
@@ -74,21 +73,24 @@ class Predictions:
     def __len__(self) -> int:
         return len(self.labels)
 
-    def from_supervision(detections: sv.Detections, class_list: List[str]):
-        labels = [class_list[x] for x in detections.class_id.tolist()]
+    def with_nms(self, class_agnostic: bool):
+        """
+        TODO: Convert this into generalised 'supervision'
+        wrapper
+        """
+        label_to_id = {class_name: id for class_name in list(set(self.labels))}
+        id_to_label = {v: k for k,v in label_to_id.items()}
+
+        detections = sv.Detections(
+            xyxy=np.array(self.boxes),
+            labels=[label_to_id[label] for label in self.labels],
+            scores=np.array(self.scores),
+        ).with_nms(class_agnostic = class_agnostic)
+
         return Predictions(
             boxes=detections.xyxy.tolist(),
-            labels=labels,
+            labels=[id_to_label[class_id] for class_id in detections],
             scores=detections.confidence.tolist(),
-            class_list=class_list,
-        )
-
-    def to_supervision(self) -> sv.Detections:
-        class_id = np.array([self.class_list.index(x) for x in self.labels])
-        return sv.Detections(
-            xyxy=np.array(self.boxes),
-            class_id=class_id,
-            confidence=np.array(self.scores),
         )
 
     def to_dataframe(self) -> pd.DataFrame:
@@ -97,7 +99,6 @@ class Predictions:
                 "labels": self.labels,
                 "boxes": self.boxes,
                 "scores": self.scores,
-                "class_list": [self.class_list] * len(self.labels),
             }
         )
 
@@ -108,7 +109,6 @@ class Predictions:
                 labels=[],
                 boxes=[[]],
                 scores=[],
-                class_list=[]
             )
 
         else:
@@ -116,7 +116,6 @@ class Predictions:
                 labels=df["labels"].tolist(),
                 boxes=df["boxes"].tolist(),
                 scores=df["scores"].tolist(),
-                class_list=df["class_list"].tolist()[0],
             )
 
     @staticmethod
@@ -152,31 +151,6 @@ class Model:
     """
     def predict(self, file_path: str) -> sv.Detections:
         pass
-
-
-@dataclass
-class SpeculativePrediction:
-    """
-    Didnt want to forget the name
-    https://arxiv.org/abs/2302.01318
-
-    This is a request, and will only
-    be fulfilled if the CascadeModel
-    contains the components to do so.
-
-    Should be aiming for a matching system.
-    Where they all pass through everything
-    """
-
-    chain_start: bool = False
-
-    detections: Optional[Predictions] = None
-
-    # hit if there's a downstream Detector
-    repredict_whole_frame: bool = False
-
-    # just whether the last model ran or not
-    triggered: Optional[bool] = None
 
 
 @dataclass
@@ -289,6 +263,7 @@ class ConditionalModel:
 class ModelChain(Model):
     conditional_models: List[ConditionalModel]
     log_level: str
+    all_predictions: Dict[str, Predictions]
 
     def predict(self, file_path: str) -> Predictions:
         """
@@ -297,24 +272,24 @@ class ModelChain(Model):
 
         Which creates the cleaner API
         """
-        speculative_predictions = SpeculativePrediction(
-            chain_start=True,
-        )
+        predictions = EmptyPredictions()
 
         for conditional_model in self.conditional_models:
             start = time.time()
-            speculative_predictions = conditional_model.speculate(
+            predictions, model_predictions = conditional_model.speculate(
                 file_path,
-                speculative_predictions,
+                predictions,
             )
+            all_predicitons[conditional_model.model.name] = model_predictions
             end = time.time()
             elapsed = end - start
             if self.log_level == "verbose":
+                # TODO: This should use the name of the 'conditional model', not the underlying model
                 print(
                     f"Preds with {conditional_model.model.name} took {elapsed}. Condition triggered: {conditional_model.condition_triggered}"
                 )
 
-        return speculative_predictions.detections
+        return predictions 
 
 
 @dataclass
@@ -355,10 +330,7 @@ class FastBase(ConditionalModel):
             confidence_trigger=self.confidence_trigger,
         ).evaluate(detections)
 
-        return SpeculativePrediction(
-            detections=detections,
-            repredict_whole_frame=repredict_whole_frame,
-        )
+        return  
 
 
 @dataclass
@@ -410,8 +382,6 @@ class HFEmbedder(Embedder):
 
         with torch.no_grad():
             embeddings = self.model(**inputs).last_hidden_state[0][0].tolist()
-            #embeddings = self.model(**inputs) 
-            #print('successful embedding generation')
 
         return embeddings
 
@@ -502,50 +472,25 @@ class ConditionalNNClassifier(ConditionalModel):
     model: NNClassifier
     condition: Callable
 
-    def match(self, speculative_prediction: SpeculativePrediction) -> bool:
-        """
-        Biggest weakness is prediction level conditions
-        """
-        pass
+    def speculate(self, file_path: str, speculative_prediction: Predictions) -> Predicitions:
 
-    def speculate(self, file_path: str, speculative_prediction: SpeculativePrediction) -> SpeculativePrediction:
+        output_preds = []
+        list_of_preds = speculative_predictions.to_list_of_preds()
 
-        # does not edit the boxes
-        output_labels = []
-        output_scores = []
-        output_boxes = []
-
-        # prioristise fixing this, should be easy
-        for label, box, score in zip(
-            speculative_prediction.detections.labels,
-            speculative_prediction.detections.boxes,
-            speculative_prediction.detections.scores,
-        ):
-            # simplifies use of lambda for condition
-            prediction = Prediction(
-                label=label,
-                box=box,
-                score=score,
-            )
-
+        for prediction in list_of_preds:
             if self.condition(prediction): 
                 speculative_prediction.condition_triggered = True
                 image = Image.open(file_path)
                 cropped_image = image.crop(prediction.box)
                 new_label = self.model.predict('', image=cropped_image)
-                output_labels.append(f'{self.model.name}: {new_label}')
-                output_scores.append(0.5)
-                output_boxes.append(box)
-            else: 
-                output_labels.append(label)
-                output_scores.append(score)
-                output_boxes.append(box)
+                prediction.label = f'{self.model.name}: {new_label}'
+                
+            output_preds.append(prediction)
 
         speculative_prediction.detections = Predictions(
             labels=output_labels,
             scores=output_scores,
             boxes=output_boxes,
-            class_list=self.model.class_list,
         )
         return speculative_prediction
 
