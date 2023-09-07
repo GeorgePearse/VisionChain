@@ -11,3 +11,4 @@ To Do:
 - [ ] Support NN Classifiers based on the embeddings of multiple models.
 - [ ] Support Segmentation models
 - [ ] Support more from https://github.com/IDEA-Research/Grounded-Segment-Anything/tree/main
+- [ ] Integrate TaskMatrix a bit https://github.com/microsoft/TaskMatrix
