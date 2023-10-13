@@ -12,3 +12,23 @@ To Do:
 - [ ] Support Segmentation models
 - [ ] Support more from https://github.com/IDEA-Research/Grounded-Segment-Anything/tree/main
 - [ ] Integrate TaskMatrix a bit https://github.com/microsoft/TaskMatrix
+
+```
+model = vc.ModelChain(
+    [
+        vc.ConditionalDetector(
+            model=yolov8,
+        ),
+        vc.ConditionalDetector(
+            model=grounded_sam, 
+            frame_level_condition = lambda predictions: any([score < 0.5 for score in predictions.scores]),
+            prediction_level_condition = lambda pred: 'cat' in pred.label,
+        ),
+        vc.ConditionalClassifier(
+            model=nn_classifier,
+            prediction_level_condition = lambda pred: 'dog' in pred.label,
+        ),
+    ],
+    log_level = 'verbose',
+)
+```
