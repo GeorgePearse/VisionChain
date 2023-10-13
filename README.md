@@ -13,7 +13,8 @@ To Do:
 - [ ] Support more from https://github.com/IDEA-Research/Grounded-Segment-Anything/tree/main
 - [ ] Integrate TaskMatrix a bit https://github.com/microsoft/TaskMatrix
 
-```
+
+```python
 model = vc.ModelChain(
     [
         vc.ConditionalDetector(
